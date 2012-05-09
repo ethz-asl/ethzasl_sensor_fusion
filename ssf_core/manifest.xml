@@ -1,0 +1,21 @@
+<package>
+  <description brief="ssf_core">
+
+     Single Sensor Fusion (SSF) framework containing the core filter functions including full state propagation and shell for update sensor modules
+
+  </description>
+  <author>Stephan Weiss, Markus Achtelik</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes="under active development"/>
+  <url>http://ros.org/wiki/ethzasl_sensor_fusion/ssf_core</url>
+  <depend package="roscpp"/>
+  <depend package="sensor_msgs"/>
+  <depend package="dynamic_reconfigure"/>
+  <depend package="eigen"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include -I${prefix}/cfg/cpp" lflags="-L${prefix}/lib -lssf_core" />
+  </export>
+</package>
+
+

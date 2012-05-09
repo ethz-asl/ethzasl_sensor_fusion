@@ -1,0 +1,13 @@
+<stack>
+  <description brief="ethzasl_sensor_fusion">
+
+	ethzasl_sensor_fusion
+
+  </description>
+  <author>Maintained by Stephan Weiss, Markus Achtelik</author>
+  <license>BSD</license>  
+  <review status="unreviewed" notes="under active development"/>
+  <url>http://ros.org/wiki/ethzasl_sensor_fusion</url>
+  <depend stack="ros" />
+
+</stack>
