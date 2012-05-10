@@ -79,19 +79,24 @@ void PositionSensorHandler::measurementCallback(const ssf_updates::PositionWithC
 			,-state_old.p_ic_(1), state_old.p_ic_(0), 0;
 
 	// construct H matrix using H-blockx :-)
-	H_old.block(0,0,3,3) = C_wv.transpose()*state_old.L_;
-	H_old.block(0,6,3,3) = -C_wv.transpose()*C_q.transpose()*pic_sk*state_old.L_;
-	H_old.block(0,15,3,1) = C_wv.transpose()*C_q.transpose()*state_old.p_ic_ + C_wv.transpose()*state_old.p_;
-	H_old.block(0,16,3,3) = -C_wv.transpose()*skewold;
-	H_old.block(0,22,3,3) = C_wv.transpose()*C_q.transpose()*state_old.L_;	// use "camera"-IMU distance state here as position_sensor-IMU distance
-	H_old.block(3,16,3,3) = Eigen::Matrix<double,3,3>::Identity();	// fix vision world drift since it does not exist here
-	H_old.block(6,19,3,3) = Eigen::Matrix<double,3,3>::Identity();	// fix "camera"-IMU drift since it does not exist here
+	// position
+	H_old.block(0,0,3,3) = C_wv.transpose()*state_old.L_; // p
+	H_old.block(0,6,3,3) = -C_wv.transpose()*C_q.transpose()*pic_sk*state_old.L_; // q
+	H_old.block(0,15,3,1) = C_wv.transpose()*C_q.transpose()*state_old.p_ic_ + C_wv.transpose()*state_old.p_; // L
+	H_old.block(0,16,3,3) = -C_wv.transpose()*skewold; // q_wv
+	H_old.block(0,22,3,3) = C_wv.transpose()*C_q.transpose()*state_old.L_;	// use "camera"-IMU distance p_ic state here as position_sensor-IMU distance
+	H_old.block(3,16,3,3) = Eigen::Matrix<double,3,3>::Identity();	// fix vision world drift q_wv since it does not exist here
+	H_old.block(6,19,3,3) = Eigen::Matrix<double,3,3>::Identity();	// fix "camera"-IMU drift q_ci since it does not exist here
 
 	// construct residuals
+	// position
 	r_old.block(0,0,3,1) = z_p_ - C_wv.transpose()*(state_old.p_ + C_q.transpose()*state_old.p_ic_)*state_old.L_;
+	// vision world drift q_wv
 	r_old.block(3,0,3,1) = -state_old.q_wv_.vec()/state_old.q_wv_.w()*2;
+	// "camera"-IMU drift q_ci
 	r_old.block(6,0,3,1) = -state_old.q_ci_.vec()/state_old.q_ci_.w()*2;
 
+	// call update step in core class
 	measurements->ssf_core_.applyMeasurement(idx,H_old,r_old,R);
 }
 

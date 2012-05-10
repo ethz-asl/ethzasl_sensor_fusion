@@ -95,21 +95,26 @@ void PoseSensorHandler::measurementCallback(const geometry_msgs::PoseWithCovaria
 			,-state_old.p_ic_(1), state_old.p_ic_(0), 0;
 
 	// construct H matrix using H-blockx :-)
-	H_old.block(0,0,3,3) = C_wv.transpose()*state_old.L_;
-	H_old.block(0,6,3,3) = -C_wv.transpose()*C_q.transpose()*pic_sk*state_old.L_;
-	H_old.block(0,15,3,1) = C_wv.transpose()*C_q.transpose()*state_old.p_ic_ + C_wv.transpose()*state_old.p_;
-	H_old.block(0,16,3,3) = -C_wv.transpose()*skewold;
-	H_old.block(0,22,3,3) = C_wv.transpose()*C_q.transpose()*state_old.L_;
-	H_old.block(3,6,3,3) = C_ci;
-	H_old.block(3,16,3,3) = C_ci*C_q;
-	H_old.block(3,19,3,3) = Eigen::Matrix<double,3,3>::Identity();
+	// position:
+	H_old.block(0,0,3,3) = C_wv.transpose()*state_old.L_; // p
+	H_old.block(0,6,3,3) = -C_wv.transpose()*C_q.transpose()*pic_sk*state_old.L_; // q
+	H_old.block(0,15,3,1) = C_wv.transpose()*C_q.transpose()*state_old.p_ic_ + C_wv.transpose()*state_old.p_; // L
+	H_old.block(0,16,3,3) = -C_wv.transpose()*skewold; // q_wv
+	H_old.block(0,22,3,3) = C_wv.transpose()*C_q.transpose()*state_old.L_; //p_ic
+	// attitude
+	H_old.block(3,6,3,3) = C_ci; // q
+	H_old.block(3,16,3,3) = C_ci*C_q; // q_wv
+	H_old.block(3,19,3,3) = Eigen::Matrix<double,3,3>::Identity(); //q_ci
 	H_old(6,18) = 1.0;	// fix vision world yaw drift because unobservable otherwise (see PhD Thesis)
 
 	// construct residuals
+	// position
+	r_old.block(0,0,3,1) = z_p_ - C_wv.transpose()*(state_old.p_ + C_q.transpose()*state_old.p_ic_)*state_old.L_;
+	// attitude
 	Eigen::Quaternion<double> q_err;
 	q_err = (state_old.q_wv_*state_old.q_*state_old.q_ci_).conjugate()*z_q_;
-	r_old.block(0,0,3,1) = z_p_ - C_wv.transpose()*(state_old.p_ + C_q.transpose()*state_old.p_ic_)*state_old.L_;
 	r_old.block(3,0,3,1) = q_err.vec()/q_err.w()*2;
+	// vision world yaw drift
 	q_err = state_old.q_wv_;
 	r_old(6,0) = -2*(q_err.w()*q_err.z()+q_err.x()*q_err.y())/(1-2*(q_err.y()*q_err.y()+q_err.z()*q_err.z()));
 
