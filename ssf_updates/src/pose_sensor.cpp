@@ -39,7 +39,7 @@ void PoseSensorHandler::measurementCallback(const geometry_msgs::PoseWithCovaria
 	State state_old;
 	ros::Time time_old = msg->header.stamp;
 	Eigen::Matrix<double,nMeas_,nState_>H_old;
-	Eigen::Matrix<double, nMeas_, 1> r_old(nMeas_);
+	Eigen::Matrix<double, nMeas_, 1> r_old;
 	Eigen::Matrix<double,nMeas_,nMeas_> R;
 
 	H_old.setZero();

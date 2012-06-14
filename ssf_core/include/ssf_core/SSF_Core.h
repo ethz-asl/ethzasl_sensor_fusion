@@ -213,7 +213,7 @@ public:
 	  Eigen::Matrix<double, nState_, R_type::RowsAtCompileTime> K;
 
 	  S = H_delayed * StateBuffer_[idx_delaystate].P_ * H_delayed.transpose() + R_delayed ;
-	  K = StateBuffer_[idx_delaystate].P_ * H_delayed.transpose() * S_.inverse();
+	  K = StateBuffer_[idx_delaystate].P_ * H_delayed.transpose() * S.inverse();
 
 	  correction_ = K * res_delayed;
 	  Eigen::Matrix<double,nState_, nState_> KH = (Eigen::Matrix<double,nState_,nState_>::Identity() - K * H_delayed);
