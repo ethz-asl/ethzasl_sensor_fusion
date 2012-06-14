@@ -37,7 +37,8 @@ private:
 		a_m =g;				/// initial acceleration
 
 		p_ic = Eigen::Matrix<double,3,1>(0, 0, 0);	/// distance camera-IMU
-		q_ci=Eigen::Quaternion<double>(0, 1, 0, 0);	/// rotation camera-IMU
+//		q_ci=Eigen::Quaternion<double>(0, 1, 0, 0);	/// rotation camera-IMU
+q_ci=Eigen::Quaternion<double>(0, 1, -1, 0);
 		q_ci.normalize();
 		q_wv=Eigen::Quaternion<double>(1, 0, 0, 0);	/// vision-world rotation drift
 		q_wv.normalize();
