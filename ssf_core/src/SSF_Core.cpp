@@ -475,7 +475,7 @@ void SSF_Core::predictProcessCovariance(const double dt){
 	Fd_.block(6,6,3,3) = E;
 	Fd_.block(6,9,3,3) = F;
 
-	calc_Q(dt, StateBuffer_[idx_P_].q_, ew, ea, nav, nbav, nwv, nbwv, n_L_, nqwvv, nqciv, npicv, &Qd_);
+	calc_Q(dt, StateBuffer_[idx_P_].q_, ew, ea, nav, nbav, nwv, nbwv, n_L_, nqwvv, nqciv, npicv, Qd_);
 	StateBuffer_[idx_P_].P_ = Fd_ *  StateBuffer_[(unsigned char)(idx_P_-1)].P_ * Fd_.transpose() + Qd_;
 
 	idx_P_++;
