@@ -21,7 +21,7 @@
 
 #include <ssf_core/ext_imu.h>
 #include <ssf_core/ext_state.h>
-#include <ssf_core/ext_ekf.h>
+#include <sensor_fusion_comm/ExtEkf.h>
 
 #include <vector>
 
@@ -150,12 +150,12 @@ private:
 	ssf_core::ext_state msgPoseCtrl_;
 
 	ros::Publisher pubCorrect_;	/// Topic containng corrections for external state propagation
-	ssf_core::ext_ekf msgCorrect_;
+	sensor_fusion_comm::ExtEkf msgCorrect_;
 
 	ros::Subscriber subState_;	/// input from external state propagation
 	ros::Subscriber subImu_;	/// IMU readings
 
-	ssf_core::ext_ekf hl_state_buf_;	/// buffer to store external propagation data
+	sensor_fusion_comm::ExtEkf hl_state_buf_;	/// buffer to store external propagation data
 
 	/// dynamic reconfigure
 	ReconfigureServer *reconfServer_;
@@ -166,7 +166,7 @@ private:
 	void predictProcessCovariance(const double dt);	/// covariance propagation
 	void propPToIdx(unsigned char idx);	/// propagate covariance to a given index in the ringbuffer
 	void imuCallback(const sensor_msgs::ImuConstPtr & msg);	/// internal state propagation, only read IMU data
-	void stateCallback(const ssf_core::ext_ekfConstPtr & msg);	/// external state propagation
+	void stateCallback(const sensor_fusion_comm::ExtEkfConstPtr & msg);	/// external state propagation
 	void Config(ssf_core::SSF_CoreConfig &config, uint32_t level);	/// dynamic reconfigure callbacks
 	void DynConfig(ssf_core::SSF_CoreConfig &config, uint32_t level);	/// dynamic reconfigure callbacks
 

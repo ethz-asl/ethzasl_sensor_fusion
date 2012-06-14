@@ -40,7 +40,7 @@ SSF_Core::SSF_Core(){
 	ros::NodeHandle pnh("~");
 
 	pubState_ = nh.advertise<ssf_core::DoubleArrayStamped>("state_out", 1);
-	pubCorrect_ = nh.advertise<ssf_core::ext_ekf>("correction", 1);
+	pubCorrect_ = nh.advertise<sensor_fusion_comm::ExtEkf>("correction", 1);
 	pubPose_ = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("pose", 1);
 	pubPoseCrtl_ = nh.advertise<ssf_core::ext_state>("ext_state", 1);
 	msgState_.data.resize(nFullState_, 0);
@@ -179,7 +179,7 @@ void SSF_Core::initialize(const Eigen::Matrix<double, 3, 1> & p, const Eigen::Ma
 	msgCorrect_.state[13] = StateBuffer_[(unsigned char)(idx_state_-1)].b_a_[0];
 	msgCorrect_.state[14] = StateBuffer_[(unsigned char)(idx_state_-1)].b_a_[1];
 	msgCorrect_.state[15] = StateBuffer_[(unsigned char)(idx_state_-1)].b_a_[2];
-	msgCorrect_.flag=ssf_core::ext_ekf::initialization;
+	msgCorrect_.flag=sensor_fusion_comm::ExtEkf::initialization;
 	pubCorrect_.publish(msgCorrect_);
 
 	initialized_=true;
@@ -257,7 +257,7 @@ void SSF_Core::imuCallback(const sensor_msgs::ImuConstPtr & msg){
 }
 
 
-void SSF_Core::stateCallback(const ssf_core::ext_ekfConstPtr & msg){
+void SSF_Core::stateCallback(const sensor_fusion_comm::ExtEkfConstPtr & msg){
 
 	if(!initialized_)
 		return; 	// // early abort // //
@@ -288,15 +288,15 @@ void SSF_Core::stateCallback(const ssf_core::ext_ekfConstPtr & msg){
 
 	int32_t flag = msg->flag;
 	if (data_playback_)
-	  flag = ssf_core::ext_ekf::ignore_state;
+	  flag = sensor_fusion_comm::ExtEkf::ignore_state;
 
 	bool isnumeric = true;
-	if(flag==ssf_core::ext_ekf::current_state)
+	if(flag==sensor_fusion_comm::ExtEkf::current_state)
 		isnumeric = checkForNumeric(&msg->state[0],10, "before prediction p,v,q");
 
 	isnumeric = checkForNumeric((double*)(&StateBuffer_[idx_state_].p_[0]),3, "before prediction p");
 
-	if(flag==ssf_core::ext_ekf::current_state && isnumeric)	// state propagation is made externally, so we read the actual state
+	if(flag==sensor_fusion_comm::ExtEkf::current_state && isnumeric)	// state propagation is made externally, so we read the actual state
 	{
 		StateBuffer_[idx_state_].p_ = Eigen::Matrix<double,3,1>(msg->state[0], msg->state[1], msg->state[2]);
 		StateBuffer_[idx_state_].v_ = Eigen::Matrix<double,3,1>(msg->state[3], msg->state[4], msg->state[5]);
@@ -314,7 +314,7 @@ void SSF_Core::stateCallback(const ssf_core::ext_ekfConstPtr & msg){
 
 		hl_state_buf_ = *msg;
 	}
-	else if(flag==ssf_core::ext_ekf::ignore_state || !isnumeric)	// otherwise let's do the state prop. here
+	else if(flag==sensor_fusion_comm::ExtEkf::ignore_state || !isnumeric)	// otherwise let's do the state prop. here
 		propagateState(StateBuffer_[idx_state_].time_-StateBuffer_[(unsigned char)(idx_state_-1)].time_);
 
 	predictProcessCovariance(StateBuffer_[idx_P_].time_-StateBuffer_[(unsigned char)(idx_P_-1)].time_);
@@ -761,7 +761,7 @@ bool SSF_Core::applyMeasurement(unsigned char idx_delaystate, const MatrixXSd& H
 	msgCorrect_.state[14] = StateBuffer_[idx].b_a_[1] - hl_state_buf_.state[14];
 	msgCorrect_.state[15] = StateBuffer_[idx].b_a_[2] - hl_state_buf_.state[15];
 
-	msgCorrect_.flag=ssf_core::ext_ekf::state_correction;
+	msgCorrect_.flag=sensor_fusion_comm::ExtEkf::state_correction;
 	pubCorrect_.publish(msgCorrect_);
 
 	// publish state
