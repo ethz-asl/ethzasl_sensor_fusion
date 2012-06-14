@@ -53,7 +53,9 @@ struct State
 class SSF_Core {
 
 public:
-	typedef Eigen::Matrix<double,Eigen::Dynamic,nState_> MatrixXSd;
+        typedef Eigen::Matrix<double, Eigen::Dynamic,nState_> MatrixXSd;
+        typedef Eigen::Matrix<double, nState_, 1> ErrorState;
+        typedef Eigen::Matrix<double, nState_, nState_> ErrorStateCov;
 	///dynamic reconfigure
 	template<class T>
 	void registerCallback(void(T::*cb_func)(ssf_core::SSF_CoreConfig& config, uint32_t level), T* p_obj){
@@ -66,12 +68,8 @@ public:
 			const Eigen::Matrix<double, 3, 1> & w_m, const Eigen::Matrix<double, 3, 1> & a_m,
 			const Eigen::Matrix<double, 3, 1> & g, const Eigen::Quaternion<double> & q_ci, const Eigen::Matrix<double, 3, 1> & p_ic);
 
-	/// Interface for update sensors
-	bool applyMeasurement(unsigned char idx_delaystate, const MatrixXSd& H_delayed, const Eigen::VectorXd& res_delayed, const Eigen::MatrixXd& R_delayed,double fuzzythres=0.1);	/// main update routine called by a given sensor
-	unsigned char getClosestState(State* timestate, ros::Time tstamp, double delay=0.00);	/// retreive all state information at time t. Used to build H, residual and noise matrix by update snsors
-	bool getStateAtIdx(State* timestate, unsigned char idx);	/// get all state information at a given index in the ringbuffer
 
-	/// dynamic reconfigure callbacks
+	// dynamic reconfigure callbacks
 	int stateSize(){return nState_;};
 	void setFixedScale(bool fixedScale) {fixedScale_ = fixedScale;};
 	void setFixedBias(bool fixedBias) {fixedBias_ = fixedBias;};
@@ -164,6 +162,8 @@ private:
 
 	void propagateState(const double dt);	/// state propagation
 	void predictProcessCovariance(const double dt);	/// covariance propagation
+        bool applyCorrection(unsigned char idx_delaystate, const ErrorState & res_delayed, double fuzzythres=0.1);    /// applies the correction
+
 	void propPToIdx(unsigned char idx);	/// propagate covariance to a given index in the ringbuffer
 	void imuCallback(const sensor_msgs::ImuConstPtr & msg);	/// internal state propagation, only read IMU data
 	void stateCallback(const sensor_fusion_comm::ExtEkfConstPtr & msg);	/// external state propagation
@@ -189,6 +189,42 @@ private:
 		else
 			return 0;
 	}
+
+public:
+	// Interface for update sensors
+
+	/// main update routine called by a given sensor
+	template<class H_type, class Res_type, class R_type>
+	bool applyMeasurement(unsigned char idx_delaystate, const Eigen::MatrixBase<H_type>& H_delayed,
+	                      const Eigen::MatrixBase<Res_type> & res_delayed, const Eigen::MatrixBase<R_type>& R_delayed,
+	                      double fuzzythres = 0.1)
+	{
+	  EIGEN_STATIC_ASSERT_FIXED_SIZE(H_type);
+	  EIGEN_STATIC_ASSERT_FIXED_SIZE(R_type);
+
+	  // get measurements
+	  if(!predictionMade_)
+	    return false;
+
+	  // make sure we have correctly propagated cov until idx_delaystate
+	  propPToIdx(idx_delaystate);
+
+	  R_type S;
+	  Eigen::Matrix<double, nState_, R_type::RowsAtCompileTime> K;
+
+	  S = H_delayed * StateBuffer_[idx_delaystate].P_ * H_delayed.transpose() + R_delayed ;
+	  K = StateBuffer_[idx_delaystate].P_ * H_delayed.transpose() * S_.inverse();
+
+	  correction_ = K * res_delayed;
+	  Eigen::Matrix<double,nState_, nState_> KH = (Eigen::Matrix<double,nState_,nState_>::Identity() - K * H_delayed);
+	  StateBuffer_[idx_delaystate].P_ =  KH * StateBuffer_[idx_delaystate].P_ * KH.transpose() + K * R_delayed * K.transpose();
+
+	  return applyCorrection(idx_delaystate, correction_, fuzzythres);
+	}
+
+
+	unsigned char getClosestState(State* timestate, ros::Time tstamp, double delay=0.00);   /// retreive all state information at time t. Used to build H, residual and noise matrix by update snsors
+	bool getStateAtIdx(State* timestate, unsigned char idx);        /// get all state information at a given index in the ringbuffer
 
 };
 

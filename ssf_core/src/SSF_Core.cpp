@@ -7,6 +7,7 @@
 
 #include <ssf_core/SSF_Core.h>
 #include "calcQ.h"
+#include <ssf_core/eigen_utils.h>
 
 /// debug output to check misbehavior of Eigen
 template<class T>
@@ -372,25 +373,13 @@ void SSF_Core::propagateState(const double dt )
 
 	Eigen::Quaternion<double> dq;
 	Eigen::Matrix<double,3,1> dv;
-	Eigen::Matrix<double,4,4> Omega;
 	Eigen::Matrix<double,3,1> ew = StateBuffer_[idx_state_].w_m_ - StateBuffer_[idx_state_].b_w_;
 	Eigen::Matrix<double,3,1> ewold = StateBuffer_[(unsigned char)(idx_state_-1)].w_m_ - StateBuffer_[(unsigned char)(idx_state_-1)].b_w_;
 	Eigen::Matrix<double,3,1> ea = StateBuffer_[idx_state_].a_m_ - StateBuffer_[idx_state_].b_a_;
 	Eigen::Matrix<double,3,1> eaold = StateBuffer_[(unsigned char)(idx_state_-1)].a_m_ - StateBuffer_[(unsigned char)(idx_state_-1)].b_a_;
-	Omega <<  0,     ew[2], -ew[1], ew[0]
-			 ,-ew[2],  0,      ew[0], ew[1]
-			 ,ew[1], -ew[0],  0    ,  ew[2]
-			 ,-ew[0], -ew[1], -ew[2],  0;
-	Eigen::Matrix<double,4,4> OmegaOld;
-	OmegaOld <<  0,     ewold[2], -ewold[1], ewold[0]
-			 ,-ewold[2],  0,      ewold[0], ewold[1]
-			 ,ewold[1], -ewold[0],  0    ,  ewold[2]
-			 ,-ewold[0], -ewold[1], -ewold[2],  0;
-	Eigen::Matrix<double,4,4> OmegaMean;
-	OmegaMean <<  0,     (ew[2]+ewold[2])/2, -(ew[1]+ewold[1])/2, (ew[0]+ewold[0])/2
-			 ,-(ew[2]+ewold[2])/2,  0,      (ew[0]+ewold[0])/2, (ew[1]+ewold[1])/2
-			 ,(ew[1]+ewold[1])/2, -(ew[0]+ewold[0])/2,  0    ,  (ew[2]+ewold[2])/2
-			 ,-(ew[0]+ewold[0])/2, -(ew[1]+ewold[1])/2, -(ew[2]+ewold[2])/2,  0;
+	Eigen::Matrix<double,4,4> Omega = omegaMatJPL(ew);
+	Eigen::Matrix<double,4,4> OmegaOld = omegaMatJPL(ewold);
+	Eigen::Matrix<double,4,4> OmegaMean = omegaMatJPL((ew + ewold)/2);
 
 	// zero order quaternion integration
 //	StateBuffer_[idx_state_].q_ = (Eigen::Matrix<double,4,4>::Identity() + 0.5*Omega*dt)*StateBuffer_[(unsigned char)(idx_state_-1)].q_.coeffs();
@@ -438,14 +427,8 @@ void SSF_Core::predictProcessCovariance(const double dt){
 	Eigen::Matrix<double,3,1> ew = StateBuffer_[idx_P_].w_m_ - StateBuffer_[idx_P_].b_w_;
 	Eigen::Matrix<double,3,1> ea = StateBuffer_[idx_P_].a_m_ - StateBuffer_[idx_P_].b_a_;
 
-	Eigen::Matrix<double,3,3> a_sk;
-	a_sk << 0, -ea(2), ea(1)
-			,ea(2), 0, -ea(0)
-			,-ea(1), ea(0), 0;
-	Eigen::Matrix<double,3,3> w_sk;
-	w_sk << 0, -ew(2), ew(1)
-			,ew(2), 0, -ew(0)
-			,-ew(1), ew(0), 0;
+	Eigen::Matrix<double,3,3> a_sk = skew(ea);
+	Eigen::Matrix<double,3,3> w_sk = skew(ew);
 	Eigen::Matrix<double,3,3> eye3 = Eigen::Matrix<double,3,3>::Identity();
 
 	Eigen::Matrix<double,3,3> C_eq = StateBuffer_[idx_P_].q_.toRotationMatrix();
@@ -563,36 +546,37 @@ void SSF_Core::propPToIdx(unsigned char idx)
 		  predictProcessCovariance(StateBuffer_[idx_P_].time_-StateBuffer_[(unsigned char)(idx_P_-1)].time_);
 }
 
-
-bool SSF_Core::applyMeasurement(unsigned char idx_delaystate, const MatrixXSd& H_delayed, const Eigen::VectorXd& res_delayed, const Eigen::MatrixXd& R_delayed,double fuzzythres)
+bool SSF_Core::applyCorrection(unsigned char idx_delaystate, const ErrorState & res_delayed, double fuzzythres)
+//bool SSF_Core::applyMeasurement(unsigned char idx_delaystate, const MatrixXSd& H_delayed, const Eigen::VectorXd& res_delayed, const Eigen::MatrixXd& R_delayed,double fuzzythres)
 {
-	// get measurements
-	if(!predictionMade_)
-		return false;
+//	// get measurements
+//	if(!predictionMade_)
+//		return false;
+//
+//
+//
+//	// check if all dimensions are correct, take H_delayed as "leader"
+//	unsigned char meas = H_delayed.rows();
+//	if(res_delayed.rows()!=meas || R_delayed.rows()!=meas || R_delayed.cols()!=meas)
+//	{
+//		ROS_WARN_STREAM_THROTTLE(0.5,"sizes of update matrices H and R do not match\n");
+//		return 0;	// // early abort // //
+//	}
+//
+//	// make sure we have correctly propagated cov until idx_delaystate
+//	propPToIdx(idx_delaystate);
+//
+//	S_.resize(meas,meas);
+//	K_.resize(nState_,meas);
+//
+//	S_ = H_delayed * StateBuffer_[idx_delaystate].P_ * H_delayed.transpose() + R_delayed ;
+//	K_ = StateBuffer_[idx_delaystate].P_ * H_delayed.transpose() * S_.inverse();
+//
+//	correction_ = K_ * res_delayed;
+//	Eigen::Matrix<double,nState_, nState_> KH = (Eigen::Matrix<double,nState_,nState_>::Identity() - K_ * H_delayed);
+//	StateBuffer_[idx_delaystate].P_ =  KH * StateBuffer_[idx_delaystate].P_ * KH.transpose() + K_ * R_delayed * K_.transpose();
 
 	static int seq_m = 0;
-
-	// check if all dimensions are correct, take H_delayed as "leader"
-	unsigned char meas = H_delayed.rows();
-	if(res_delayed.rows()!=meas || R_delayed.rows()!=meas || R_delayed.cols()!=meas)
-	{
-		ROS_WARN_STREAM_THROTTLE(0.5,"sizes of update matrices H and R do not match\n");
-		return 0;	// // early abort // //
-	}
-
-	// make sure we have correctly propagated cov until idx_delaystate
-	propPToIdx(idx_delaystate);
-
-	S_.resize(meas,meas);
-	K_.resize(nState_,meas);
-
-	S_ = H_delayed * StateBuffer_[idx_delaystate].P_ * H_delayed.transpose() + R_delayed ;
-	K_ = StateBuffer_[idx_delaystate].P_ * H_delayed.transpose() * S_.inverse();
-
-	correction_ = K_ * res_delayed;
-	Eigen::Matrix<double,nState_, nState_> KH = (Eigen::Matrix<double,nState_,nState_>::Identity() - K_ * H_delayed);
-	StateBuffer_[idx_delaystate].P_ =  KH * StateBuffer_[idx_delaystate].P_ * KH.transpose() + K_ * R_delayed * K_.transpose();
-
 	if(fixedScale_){
 		correction_(15) = 0; //scale
 	}
@@ -638,49 +622,15 @@ bool SSF_Core::applyMeasurement(unsigned char idx_delaystate, const MatrixXSd& H
 		StateBuffer_[idx_delaystate].L_=0.1;
 	}
 
-	Eigen::Matrix<double,3,1> theta = correction_.block(6,0,3,1);
-	Eigen::Quaternion<double> qbuff_q = Eigen::Quaternion<double>(1,0,0,0);
-	if ((theta.transpose()*theta)(0)/4.0<1)
-	{
-		qbuff_q.w() = sqrt(1-(theta.transpose()*theta)(0)/4.0);
-		qbuff_q.vec() = theta/2;
-	}
-	else
-	{
-		qbuff_q.w() = 1/sqrt(1+(theta.transpose()*theta)(0)/4.0);
-		qbuff_q.vec() = (theta/2)/sqrt(1+(theta.transpose()*theta)(0)/4.0);
-	}
-	StateBuffer_[idx_delaystate].q_ = StateBuffer_[idx_delaystate].q_*qbuff_q;
+	Eigen::Quaternion<double> qbuff_q = quaternionFromSmallAngle(correction_.block<3,1>(6, 0));
+	StateBuffer_[idx_delaystate].q_ = StateBuffer_[idx_delaystate].q_ * qbuff_q;
 	StateBuffer_[idx_delaystate].q_.normalize();
 
-	theta = correction_.block(16,0,3,1);
-	Eigen::Quaternion<double> qbuff_qwv = Eigen::Quaternion<double>(1,0,0,0);
-
-        if ((theta.transpose()*theta)(0)/4.0<1)
-        {
-                qbuff_qwv.w() = sqrt(1-(theta.transpose()*theta)(0)/4.0);
-                qbuff_qwv.vec() = theta/2;
-        }
-        else
-        {
-                qbuff_qwv.w() = 1/sqrt(1+(theta.transpose()*theta)(0)/4.0);
-                qbuff_qwv.vec() = (theta/2)/sqrt(1+(theta.transpose()*theta)(0)/4.0);
-        }
+	Eigen::Quaternion<double> qbuff_qwv = quaternionFromSmallAngle(correction_.block<3,1>(16,0));
 	StateBuffer_[idx_delaystate].q_wv_ = StateBuffer_[idx_delaystate].q_wv_*qbuff_qwv;
 	StateBuffer_[idx_delaystate].q_wv_.normalize();
 
-	theta = correction_.block(19,0,3,1);
-	Eigen::Quaternion<double> qbuff_qci = Eigen::Quaternion<double>(1,0,0,0);
-	if ((theta.transpose()*theta)(0)/4.0<1)
-	{
-		qbuff_qci.w() = sqrt(1-(theta.transpose()*theta)(0)/4.0);
-		qbuff_qci.vec() = theta/2;
-	}
-	else
-	{
-		qbuff_qci.w() = 1/sqrt(1+(theta.transpose()*theta)(0)/4.0);
-		qbuff_qci.vec() = (theta/2)/sqrt(1+(theta.transpose()*theta)(0)/4.0);
-	}
+	Eigen::Quaternion<double> qbuff_qci = quaternionFromSmallAngle(correction_.block<3,1>(19,0));
 	StateBuffer_[idx_delaystate].q_ci_ = StateBuffer_[idx_delaystate].q_ci_*qbuff_qci;
 	StateBuffer_[idx_delaystate].q_ci_.normalize();
 

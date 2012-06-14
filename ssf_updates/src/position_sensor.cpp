@@ -6,6 +6,7 @@
  */
 
 #include "position_sensor.h"
+#include <ssf_core/eigen_utils.h>
 #define nMeas_ 9 // measurement size
 
 void PositionSensorHandler::subscribe(){
@@ -35,10 +36,12 @@ void PositionSensorHandler::measurementCallback(const ssf_updates::PositionWithC
 	// init variables
 	State state_old;
 	ros::Time time_old = msg->header.stamp;
-	SSF_Core::MatrixXSd H_old = Eigen::Matrix<double,nMeas_,nState_>::Constant(0);
-	Eigen::VectorXd r_old(nMeas_);
-	Eigen::MatrixXd R = Eigen::Matrix<double,nMeas_,nMeas_>::Constant(0);
-	R = Eigen::Matrix<double,nMeas_,nMeas_>::Constant(0);
+        Eigen::Matrix<double,nMeas_,nState_>H_old;
+        Eigen::Matrix<double, nMeas_, 1> r_old(nMeas_);
+        Eigen::Matrix<double,nMeas_,nMeas_> R;
+
+        H_old.setZero();
+        R.setZero();
 
 	// get measurements
 	z_p_ = Eigen::Matrix<double,3,1>(msg->position.x, msg->position.y, msg->position.z);
@@ -66,35 +69,29 @@ void PositionSensorHandler::measurementCallback(const ssf_updates::PositionWithC
 	Eigen::Matrix<double,3,3> C_ci = state_old.q_ci_.conjugate().toRotationMatrix();
 
 	// preprocess for elements in H matrix
-	Eigen::Matrix<double,3,3> skewold;
 	Eigen::Matrix<double,3,1> vecold;
 	vecold = (state_old.p_+C_q.transpose()*state_old.p_ic_)*state_old.L_;
-	skewold << 0, -vecold(2), vecold(1)
-			,vecold(2), 0, -vecold(0)
-			,-vecold(1), vecold(0), 0;
+	Eigen::Matrix<double,3,3> skewold = skew(vecold);
 
-	Eigen::Matrix<double,3,3> pic_sk;
-	pic_sk << 0, -state_old.p_ic_(2), state_old.p_ic_(1)
-			,state_old.p_ic_(2), 0, -state_old.p_ic_(0)
-			,-state_old.p_ic_(1), state_old.p_ic_(0), 0;
+	Eigen::Matrix<double,3,3> pic_sk = skew(state_old.p_ic_);
 
 	// construct H matrix using H-blockx :-)
 	// position
-	H_old.block(0,0,3,3) = C_wv.transpose()*state_old.L_; // p
-	H_old.block(0,6,3,3) = -C_wv.transpose()*C_q.transpose()*pic_sk*state_old.L_; // q
-	H_old.block(0,15,3,1) = C_wv.transpose()*C_q.transpose()*state_old.p_ic_ + C_wv.transpose()*state_old.p_; // L
-	H_old.block(0,16,3,3) = -C_wv.transpose()*skewold; // q_wv
-	H_old.block(0,22,3,3) = C_wv.transpose()*C_q.transpose()*state_old.L_;	// use "camera"-IMU distance p_ic state here as position_sensor-IMU distance
-	H_old.block(3,16,3,3) = Eigen::Matrix<double,3,3>::Identity();	// fix vision world drift q_wv since it does not exist here
-	H_old.block(6,19,3,3) = Eigen::Matrix<double,3,3>::Identity();	// fix "camera"-IMU drift q_ci since it does not exist here
+	H_old.block<3,3>(0,0) = C_wv.transpose()*state_old.L_; // p
+	H_old.block<3,3>(0,6) = -C_wv.transpose()*C_q.transpose()*pic_sk*state_old.L_; // q
+	H_old.block<3,1>(0,15) = C_wv.transpose()*C_q.transpose()*state_old.p_ic_ + C_wv.transpose()*state_old.p_; // L
+	H_old.block<3,3>(0,16) = -C_wv.transpose()*skewold; // q_wv
+	H_old.block<3,3>(0,22) = C_wv.transpose()*C_q.transpose()*state_old.L_;	// use "camera"-IMU distance p_ic state here as position_sensor-IMU distance
+	H_old.block<3,3>(3,16) = Eigen::Matrix<double,3,3>::Identity();	// fix vision world drift q_wv since it does not exist here
+	H_old.block<3,3>(6,19) = Eigen::Matrix<double,3,3>::Identity();	// fix "camera"-IMU drift q_ci since it does not exist here
 
 	// construct residuals
 	// position
-	r_old.block(0,0,3,1) = z_p_ - C_wv.transpose()*(state_old.p_ + C_q.transpose()*state_old.p_ic_)*state_old.L_;
+	r_old.block<3,1>(0,0) = z_p_ - C_wv.transpose()*(state_old.p_ + C_q.transpose()*state_old.p_ic_)*state_old.L_;
 	// vision world drift q_wv
-	r_old.block(3,0,3,1) = -state_old.q_wv_.vec()/state_old.q_wv_.w()*2;
+	r_old.block<3,1>(3,0) = -state_old.q_wv_.vec()/state_old.q_wv_.w()*2;
 	// "camera"-IMU drift q_ci
-	r_old.block(6,0,3,1) = -state_old.q_ci_.vec()/state_old.q_ci_.w()*2;
+	r_old.block<3,1>(6,0) = -state_old.q_ci_.vec()/state_old.q_ci_.w()*2;
 
 	// call update step in core class
 	measurements->ssf_core_.applyMeasurement(idx,H_old,r_old,R);
