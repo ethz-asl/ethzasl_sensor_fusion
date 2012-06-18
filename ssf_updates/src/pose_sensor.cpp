@@ -57,23 +57,32 @@ void PoseSensorHandler::measurementCallback(const geometry_msgs::PoseWithCovaria
 	z_p_ = Eigen::Matrix<double,3,1>(msg->pose.pose.position.x, msg->pose.pose.position.y, msg->pose.pose.position.z);
 	z_q_ = Eigen::Quaternion<double>(msg->pose.pose.orientation.w, msg->pose.pose.orientation.x, msg->pose.pose.orientation.y, msg->pose.pose.orientation.z);
 
+	// take covariance from sensor
+	R.block<6,6>(0,0) = Eigen::Matrix<double,6,6>(&msg->pose.covariance[0]);
+	R(6,6)=1e-6;	// q_vw yaw-measurement noise
+
 	/*************************************************************************************/
 	// use this if your pose sensor is ethzasl_ptam (www.ros.org/wiki/ethzasl_ptam)
 	// ethzasl_ptam publishes the camera pose as the world seen from the camera
+	Eigen::Matrix<double, 3, 3> C_zq = z_q_.toRotationMatrix();
 	z_q_ = z_q_.conjugate();
-	z_p_ = -z_q_.toRotationMatrix()*z_p_;
+	z_p_ = -C_zq.transpose() * z_p_;
 
+	Eigen::Matrix<double, 6, 6> C_cov(Eigen::Matrix<double, 6, 6>::Zero());
+	C_cov.block<3, 3> (0, 0) = C_zq;
+	C_cov.block<3, 3> (3, 3) = C_zq;
+
+	R.block<6, 6> (0, 0) = C_cov.transpose() * R.block<6, 6> (0, 0) * C_cov;
 	/*************************************************************************************/
 
-	// take covariance from sensor
-	R.block<6,6>(0,0) = Eigen::Matrix<double,6,6>(&msg->pose.covariance[0]);
-	R.block<3,3>(0,0) = z_q_.toRotationMatrix().transpose()*R.block<3,3>(0,0);
-	R.block<3,3>(3,3) = z_q_.toRotationMatrix().transpose()*R.block<3,3>(3,3);
-	for(int i=0; i<nMeas_*nMeas_;i++)
-		R(i) = fabs(R(i));
-	Eigen::Matrix<double,6,1> buffvec = R.block<6,6>(0,0).diagonal();
-	R.block<6,6>(0,0) = buffvec.asDiagonal();	// use this if your pose sensor is ethzasl_ptam (www.ros.org/wiki/ethzasl_ptam)
-	R(6,6)=1e-6;	// q_vw yaw-measurement noise
+
+//	R.block<3,3>(0,0) = z_q_.toRotationMatrix().transpose()*R.block<3,3>(0,0);
+//	R.block<3,3>(3,3) = z_q_.toRotationMatrix().transpose()*R.block<3,3>(3,3);
+//	for(int i=0; i<nMeas_*nMeas_;i++)
+//		R(i) = fabs(R(i));
+//	Eigen::Matrix<double,6,1> buffvec = R.block<6,6>(0,0).diagonal();
+//	R.block<6,6>(0,0) = buffvec.asDiagonal();	// use this if your pose sensor is ethzasl_ptam (www.ros.org/wiki/ethzasl_ptam)
+
 
 	//  alternatively take fix covariance from reconfigure GUI
 //	Eigen::Matrix<double,nMeas_,1> buffvec;
