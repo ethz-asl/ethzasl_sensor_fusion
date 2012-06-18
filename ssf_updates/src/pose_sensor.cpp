@@ -10,6 +10,14 @@
 
 #define nMeas_ 7 // measurement size
 
+PoseSensorHandler::PoseSensorHandler(Measurements* meas) :
+  MeasurementHandler(meas)
+{
+  ros::NodeHandle pnh("~");
+  pnh.param("measurement_world_sensor", measurement_world_sensor_, true);
+  subscribe();
+}
+
 void PoseSensorHandler::subscribe(){
 
 	ros::NodeHandle nh("ssf_core");
@@ -52,8 +60,9 @@ void PoseSensorHandler::measurementCallback(const geometry_msgs::PoseWithCovaria
 	/*************************************************************************************/
 	// use this if your pose sensor is ethzasl_ptam (www.ros.org/wiki/ethzasl_ptam)
 	// ethzasl_ptam publishes the camera pose as the world seen from the camera
-	z_p_ = -z_q_.toRotationMatrix()*z_p_;
 	z_q_ = z_q_.conjugate();
+	z_p_ = -z_q_.toRotationMatrix()*z_p_;
+
 	/*************************************************************************************/
 
 	// take covariance from sensor
@@ -98,6 +107,7 @@ void PoseSensorHandler::measurementCallback(const geometry_msgs::PoseWithCovaria
 	H_old.block<3,1>(0,15) = C_wv.transpose()*C_q.transpose()*state_old.p_ic_ + C_wv.transpose()*state_old.p_; // L
 	H_old.block<3,3>(0,16) = -C_wv.transpose()*skewold; // q_wv
 	H_old.block<3,3>(0,22) = C_wv.transpose()*C_q.transpose()*state_old.L_; //p_ic
+
 	// attitude
 	H_old.block<3,3>(3,6) = C_ci; // q
 	H_old.block<3,3>(3,16) = C_ci*C_q; // q_wv
@@ -107,10 +117,12 @@ void PoseSensorHandler::measurementCallback(const geometry_msgs::PoseWithCovaria
 	// construct residuals
 	// position
 	r_old.block<3,1>(0,0) = z_p_ - C_wv.transpose()*(state_old.p_ + C_q.transpose()*state_old.p_ic_)*state_old.L_;
+
 	// attitude
 	Eigen::Quaternion<double> q_err;
 	q_err = (state_old.q_wv_*state_old.q_*state_old.q_ci_).conjugate()*z_q_;
 	r_old.block<3,1>(3,0) = q_err.vec()/q_err.w()*2;
+
 	// vision world yaw drift
 	q_err = state_old.q_wv_;
 	r_old(6,0) = -2*(q_err.w()*q_err.z()+q_err.x()*q_err.y())/(1-2*(q_err.y()*q_err.y()+q_err.z()*q_err.z()));
