@@ -15,6 +15,14 @@ PoseSensorHandler::PoseSensorHandler(Measurements* meas) :
 {
   ros::NodeHandle pnh("~");
   pnh.param("measurement_world_sensor", measurement_world_sensor_, true);
+  pnh.param("use_fixed_covariance", use_fixed_covariance_, false);
+
+  ROS_INFO_COND(measurement_world_sensor_, "interpreting measurement as sensor w.r.t. world");
+  ROS_INFO_COND(!measurement_world_sensor_, "interpreting measurement as world w.r.t. sensor (e.g. ethzasl_ptam)");
+
+  ROS_INFO_COND(use_fixed_covariance_, "using fixed covariance");
+  ROS_INFO_COND(!use_fixed_covariance_, "using covariance from sensor");
+
   subscribe();
 }
 
@@ -53,41 +61,41 @@ void PoseSensorHandler::measurementCallback(const geometry_msgs::PoseWithCovaria
 	H_old.setZero();
 	R.setZero();
 
-	// get measurements
-	z_p_ = Eigen::Matrix<double,3,1>(msg->pose.pose.position.x, msg->pose.pose.position.y, msg->pose.pose.position.z);
-	z_q_ = Eigen::Quaternion<double>(msg->pose.pose.orientation.w, msg->pose.pose.orientation.x, msg->pose.pose.orientation.y, msg->pose.pose.orientation.z);
+        // get measurements
+        z_p_ = Eigen::Matrix<double,3,1>(msg->pose.pose.position.x, msg->pose.pose.position.y, msg->pose.pose.position.z);
+        z_q_ = Eigen::Quaternion<double>(msg->pose.pose.orientation.w, msg->pose.pose.orientation.x, msg->pose.pose.orientation.y, msg->pose.pose.orientation.z);
 
-	// take covariance from sensor
-	R.block<6,6>(0,0) = Eigen::Matrix<double,6,6>(&msg->pose.covariance[0]);
-	R(6,6)=1e-6;	// q_vw yaw-measurement noise
+        // take covariance from sensor
+        R.block<6,6>(0,0) = Eigen::Matrix<double,6,6>(&msg->pose.covariance[0]);
+        //clear cross-correlations between q and p
+        R.block<3,3>(0,3) = Eigen::Matrix<double, 3, 3>::Zero();
+        R.block<3,3>(3,0) = Eigen::Matrix<double, 3, 3>::Zero();
+        R(6,6)=1e-6;    // q_vw yaw-measurement noise
 
-	/*************************************************************************************/
-	// use this if your pose sensor is ethzasl_ptam (www.ros.org/wiki/ethzasl_ptam)
-	// ethzasl_ptam publishes the camera pose as the world seen from the camera
-	Eigen::Matrix<double, 3, 3> C_zq = z_q_.toRotationMatrix();
-	z_q_ = z_q_.conjugate();
-	z_p_ = -C_zq.transpose() * z_p_;
+        /*************************************************************************************/
+        // use this if your pose sensor is ethzasl_ptam (www.ros.org/wiki/ethzasl_ptam)
+        // ethzasl_ptam publishes the camera pose as the world seen from the camera
+        if(!measurement_world_sensor_){
+          Eigen::Matrix<double, 3, 3> C_zq = z_q_.toRotationMatrix();
+          z_q_ = z_q_.conjugate();
+          z_p_ = -C_zq.transpose() * z_p_;
 
-	Eigen::Matrix<double, 6, 6> C_cov(Eigen::Matrix<double, 6, 6>::Zero());
-	C_cov.block<3, 3> (0, 0) = C_zq;
-	C_cov.block<3, 3> (3, 3) = C_zq;
+          Eigen::Matrix<double, 6, 6> C_cov(Eigen::Matrix<double, 6, 6>::Zero());
+          C_cov.block<3, 3> (0, 0) = C_zq;
+          C_cov.block<3, 3> (3, 3) = C_zq;
 
-	R.block<6, 6> (0, 0) = C_cov.transpose() * R.block<6, 6> (0, 0) * C_cov;
-	/*************************************************************************************/
-
-
-//	R.block<3,3>(0,0) = z_q_.toRotationMatrix().transpose()*R.block<3,3>(0,0);
-//	R.block<3,3>(3,3) = z_q_.toRotationMatrix().transpose()*R.block<3,3>(3,3);
-//	for(int i=0; i<nMeas_*nMeas_;i++)
-//		R(i) = fabs(R(i));
-//	Eigen::Matrix<double,6,1> buffvec = R.block<6,6>(0,0).diagonal();
-//	R.block<6,6>(0,0) = buffvec.asDiagonal();	// use this if your pose sensor is ethzasl_ptam (www.ros.org/wiki/ethzasl_ptam)
+          R.block<6, 6> (0, 0) = C_cov.transpose() * R.block<6, 6> (0, 0) * C_cov;
+        }
+        /*************************************************************************************/
 
 
 	//  alternatively take fix covariance from reconfigure GUI
-//	Eigen::Matrix<double,nMeas_,1> buffvec;
-//	buffvec  << n_zp_*n_zp_,n_zp_*n_zp_,n_zp_*n_zp_,n_zq_*n_zq_,n_zq_*n_zq_,n_zq_*n_zq_,1e-6; // last element is q_vw yaw-measurement noise
-//	R = buffvec.asDiagonal();
+        if(use_fixed_covariance_)
+        {
+          const double s_zp = n_zp_*n_zp_;
+          const double s_zq = n_zq_*n_zq_;
+          R = (Eigen::Matrix<double, nMeas_, 1>() << s_zp, s_zp, s_zp, s_zq, s_zq, s_zq, 1e-6).finished().asDiagonal();
+        }
 
 	// feedback for init case
 	measurements->p_vc_ = z_p_;
