@@ -21,7 +21,7 @@ template<class Derived>
 
 /// returns a matrix with angular velocities used for quaternion derivatives/integration with the JPL notation
 /**
- quaternion has to be in the order x y z w !!!
+ The quaternion to be multiplied with this matrix has to be in the order x y z w !!!
  \param <vec> {3D vector with angular velocities}
  \return {4x4 matrix for multiplication with the quaternion}
  */
@@ -40,7 +40,7 @@ template<class Derived>
 
 /// returns a matrix with angular velocities used for quaternion derivatives/integration with the Hamilton notation
 /**
- quaternion has to be in the order x y z w !!!
+ The quaternion to be multiplied with this matrix has to be in the order x y z w !!!
  \param <vec> {3D vector with angular velocities}
  \return {4x4 matrix for multiplication with the quaternion}
  */
