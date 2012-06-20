@@ -30,7 +30,8 @@
 
 #include <vector>
 
-#define N_STATE 25 /// error state size
+#include <ssf_core/state.h>
+
 #define N_STATE_BUFFER 256	/// size of unsigned char, do not change!
 #define HLI_EKF_STATE_SIZE 16 	/// number of states exchanged with external propagation. Here: p,v,q,bw,bw=16
 
