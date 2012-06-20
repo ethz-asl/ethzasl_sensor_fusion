@@ -40,10 +40,10 @@ SSF_Core::SSF_Core(){
 	ros::NodeHandle nh("ssf_core");
 	ros::NodeHandle pnh("~");
 
-	pubState_ = nh.advertise<ssf_core::DoubleArrayStamped>("state_out", 1);
+	pubState_ = nh.advertise<sensor_fusion_comm::DoubleArrayStamped>("state_out", 1);
 	pubCorrect_ = nh.advertise<sensor_fusion_comm::ExtEkf>("correction", 1);
 	pubPose_ = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("pose", 1);
-	pubPoseCrtl_ = nh.advertise<ssf_core::ext_state>("ext_state", 1);
+	pubPoseCrtl_ = nh.advertise<sensor_fusion_comm::ExtState>("ext_state", 1);
 	msgState_.data.resize(nFullState_, 0);
 
 	subImu_ = nh.subscribe("imu_state_input", 1 /*nStateBuffer_*/, &SSF_Core::imuCallback, this);

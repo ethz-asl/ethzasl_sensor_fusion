@@ -13,15 +13,20 @@
 
 #include <ros/ros.h>
 #include <dynamic_reconfigure/server.h>
-#include <geometry_msgs/PoseWithCovarianceStamped.h>
-#include <sensor_msgs/Imu.h>
-#include <ssf_core/DoubleArrayStamped.h>
+
+//#include <ssf_core/DoubleArrayStamped.h>
 
 #include <ssf_core/SSF_CoreConfig.h>
 
-#include <ssf_core/ext_imu.h>
-#include <ssf_core/ext_state.h>
+//#include <ssf_core/ext_imu.h>
+//#include <ssf_core/ext_state.h>
+
+// message includes
+#include <sensor_fusion_comm/DoubleArrayStamped.h>
+#include <sensor_fusion_comm/ExtState.h>
 #include <sensor_fusion_comm/ExtEkf.h>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <sensor_msgs/Imu.h>
 
 #include <vector>
 
@@ -139,13 +144,13 @@ private:
 	enum{NO_UP,GOOD_UP, FUZZY_UP};
 
 	ros::Publisher pubState_;	/// This contains all states of the filter
-	ssf_core::DoubleArrayStamped msgState_;
+	sensor_fusion_comm::DoubleArrayStamped msgState_;
 
 	ros::Publisher pubPose_;	/// 6DoF pose output
 	geometry_msgs::PoseWithCovarianceStamped msgPose_;
 
 	ros::Publisher pubPoseCrtl_;	 /// 6DoF pose including velocity output
-	ssf_core::ext_state msgPoseCtrl_;
+	sensor_fusion_comm::ExtState msgPoseCtrl_;
 
 	ros::Publisher pubCorrect_;	/// Topic containng corrections for external state propagation
 	sensor_fusion_comm::ExtEkf msgCorrect_;
