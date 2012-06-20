@@ -25,7 +25,7 @@ rosbuild_genmsg()
 add_definitions (-Wall)
 
 #common commands for building c++ executables and libraries
-rosbuild_add_library(ssf_core src/SSF_Core.cpp src/measurement.cpp)
+rosbuild_add_library(ssf_core src/SSF_Core.cpp src/measurement.cpp src/state.cpp)
 rosbuild_add_compile_flags(ssf_core "-O3")
 
 
