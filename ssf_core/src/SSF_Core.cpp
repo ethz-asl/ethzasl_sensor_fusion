@@ -547,35 +547,7 @@ void SSF_Core::propPToIdx(unsigned char idx)
 }
 
 bool SSF_Core::applyCorrection(unsigned char idx_delaystate, const ErrorState & res_delayed, double fuzzythres)
-//bool SSF_Core::applyMeasurement(unsigned char idx_delaystate, const MatrixXSd& H_delayed, const Eigen::VectorXd& res_delayed, const Eigen::MatrixXd& R_delayed,double fuzzythres)
 {
-//	// get measurements
-//	if(!predictionMade_)
-//		return false;
-//
-//
-//
-//	// check if all dimensions are correct, take H_delayed as "leader"
-//	unsigned char meas = H_delayed.rows();
-//	if(res_delayed.rows()!=meas || R_delayed.rows()!=meas || R_delayed.cols()!=meas)
-//	{
-//		ROS_WARN_STREAM_THROTTLE(0.5,"sizes of update matrices H and R do not match\n");
-//		return 0;	// // early abort // //
-//	}
-//
-//	// make sure we have correctly propagated cov until idx_delaystate
-//	propPToIdx(idx_delaystate);
-//
-//	S_.resize(meas,meas);
-//	K_.resize(nState_,meas);
-//
-//	S_ = H_delayed * StateBuffer_[idx_delaystate].P_ * H_delayed.transpose() + R_delayed ;
-//	K_ = StateBuffer_[idx_delaystate].P_ * H_delayed.transpose() * S_.inverse();
-//
-//	correction_ = K_ * res_delayed;
-//	Eigen::Matrix<double,nState_, nState_> KH = (Eigen::Matrix<double,nState_,nState_>::Identity() - K_ * H_delayed);
-//	StateBuffer_[idx_delaystate].P_ =  KH * StateBuffer_[idx_delaystate].P_ * KH.transpose() + K_ * R_delayed * K_.transpose();
-
 	static int seq_m = 0;
 	if(fixedScale_){
 		correction_(15) = 0; //scale
