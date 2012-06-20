@@ -25,7 +25,7 @@ private:
 	{
 		Eigen::Matrix<double, 3, 1> p,v,b_w,b_a,p_ic,g,w_m,a_m;
 		Eigen::Quaternion<double> q, q_ci,q_wv;
-		Eigen::Matrix<double,nState_,nState_> P;
+		Eigen::Matrix<double,N_STATE,N_STATE> P;
 
 		// init values
 		g << 0, 0, 9.81;	/// gravity
@@ -41,7 +41,7 @@ private:
 		q_ci.normalize();
 		q_wv=Eigen::Quaternion<double>(1, 0, 0, 0);	/// vision-world rotation drift
 		q_wv.normalize();
-		P = Eigen::Matrix<double,nState_,nState_>::Constant(0);	/// error state covariance
+		P = Eigen::Matrix<double,N_STATE,N_STATE>::Constant(0);	/// error state covariance
 
 		// check if we have already input from the measurement sensor
 		if(p_vc_.norm()==0)

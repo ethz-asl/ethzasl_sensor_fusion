@@ -46,8 +46,8 @@ SSF_Core::SSF_Core(){
 	pubPoseCrtl_ = nh.advertise<sensor_fusion_comm::ExtState>("ext_state", 1);
 	msgState_.data.resize(nFullState_, 0);
 
-	subImu_ = nh.subscribe("imu_state_input", 1 /*nStateBuffer_*/, &SSF_Core::imuCallback, this);
-	subState_ = nh.subscribe("hl_state_input", 1 /*nStateBuffer_*/, &SSF_Core::stateCallback, this);
+	subImu_ = nh.subscribe("imu_state_input", 1 /*N_STATE_BUFFER*/, &SSF_Core::imuCallback, this);
+	subState_ = nh.subscribe("hl_state_input", 1 /*N_STATE_BUFFER*/, &SSF_Core::stateCallback, this);
 
 	msgCorrect_.state.resize(HLI_EKF_STATE_SIZE , 0);
 	hl_state_buf_.state.resize(HLI_EKF_STATE_SIZE , 0);
@@ -70,7 +70,7 @@ SSF_Core::~SSF_Core() {
 
 void SSF_Core::initialize(const Eigen::Matrix<double, 3, 1> & p, const Eigen::Matrix<double, 3, 1> & v, const Eigen::Quaternion<double> & q,
                              const Eigen::Matrix<double, 3, 1> & b_w, const Eigen::Matrix<double, 3, 1> & b_a, const double & L, const Eigen::Quaternion<double> & q_wv,
-                             const Eigen::Matrix<double, nState_, nState_> & P,
+                             const Eigen::Matrix<double, N_STATE, N_STATE> & P,
                              const Eigen::Matrix<double, 3, 1> & w_m, const Eigen::Matrix<double, 3, 1> & a_m,
                              const Eigen::Matrix<double, 3, 1> & g, const Eigen::Quaternion<double> & q_ci, const Eigen::Matrix<double, 3, 1> & p_ic)
 {
@@ -79,7 +79,7 @@ void SSF_Core::initialize(const Eigen::Matrix<double, 3, 1> & p, const Eigen::Ma
 	qvw_inittimer_ = 1;
 
 	// init state buffer
-	for(int i=0; i<nStateBuffer_;i++)
+	for(int i=0; i<N_STATE_BUFFER;i++)
 	{
 		StateBuffer_[i].p_ = Eigen::Matrix<double, 3, 1>::Constant(0);
 		StateBuffer_[i].v_ = Eigen::Matrix<double, 3, 1>::Constant(0);
@@ -90,7 +90,7 @@ void SSF_Core::initialize(const Eigen::Matrix<double, 3, 1> & p, const Eigen::Ma
 		StateBuffer_[i].q_wv_ = Eigen::Quaternion<double>(1, 0, 0, 0);
 		StateBuffer_[i].q_ci_ = Eigen::Quaternion<double>(1, 0, 0, 0);
 		StateBuffer_[i].p_ic_ = Eigen::Matrix<double, 3, 1>::Constant(0);
-		StateBuffer_[i].P_ = Eigen::Matrix<double,nState_,nState_>::Constant(0);
+		StateBuffer_[i].P_ = Eigen::Matrix<double,N_STATE,N_STATE>::Constant(0);
 		StateBuffer_[i].w_m_ = Eigen::Matrix<double, 3, 1>::Constant(0);
 		StateBuffer_[i].q_int_ = Eigen::Quaternion<double>(1, 0, 0, 0);
 		StateBuffer_[i].a_m_ = Eigen::Matrix<double, 3, 1>::Constant(0);
@@ -233,13 +233,13 @@ void SSF_Core::imuCallback(const sensor_msgs::ImuConstPtr & msg){
 	// put position and orientation covariance together...
 	boost::array<double, 36> cov;
 	for (int i=0;i<9;i++)
-		cov[i/3*6 + i%3]=StateBuffer_[(unsigned char)(idx_state_-1)].P_(i/3*nState_ + i%3);
+		cov[i/3*6 + i%3]=StateBuffer_[(unsigned char)(idx_state_-1)].P_(i/3*N_STATE + i%3);
 	for (int i=0;i<9;i++)
-		cov[i/3*6 + (i%3+3)]=StateBuffer_[(unsigned char)(idx_state_-1)].P_(i/3*nState_ + (i%3+6));
+		cov[i/3*6 + (i%3+3)]=StateBuffer_[(unsigned char)(idx_state_-1)].P_(i/3*N_STATE + (i%3+6));
 	for (int i=0;i<9;i++)
-		cov[(i/3+3)*6 + i%3]=StateBuffer_[(unsigned char)(idx_state_-1)].P_((i/3+6)*nState_ + i%3);
+		cov[(i/3+3)*6 + i%3]=StateBuffer_[(unsigned char)(idx_state_-1)].P_((i/3+6)*N_STATE + i%3);
 	for (int i=0;i<9;i++)
-		cov[(i/3+3)*6 + (i%3+3)]=StateBuffer_[(unsigned char)(idx_state_-1)].P_((i/3+6)*nState_ + (i%3+6));
+		cov[(i/3+3)*6 + (i%3+3)]=StateBuffer_[(unsigned char)(idx_state_-1)].P_((i/3+6)*N_STATE + (i%3+6));
 	msgPose_.pose.covariance = cov;
 	pubPose_.publish(msgPose_);
 
@@ -321,7 +321,7 @@ void SSF_Core::stateCallback(const sensor_fusion_comm::ExtEkfConstPtr & msg){
 	predictProcessCovariance(StateBuffer_[idx_P_].time_-StateBuffer_[(unsigned char)(idx_P_-1)].time_);
 
 	isnumeric = checkForNumeric((double*)(&StateBuffer_[idx_state_-1].p_[0]),3, "prediction p");
-	isnumeric = checkForNumeric((double*)(&StateBuffer_[idx_state_-1].P_(0)),nState_*nState_, "prediction done P");
+	isnumeric = checkForNumeric((double*)(&StateBuffer_[idx_state_-1].P_(0)),N_STATE*N_STATE, "prediction done P");
 
 	predictionMade_ = true;
 
@@ -336,13 +336,13 @@ void SSF_Core::stateCallback(const sensor_fusion_comm::ExtEkfConstPtr & msg){
 	// put position and orientation covariance together...
 	boost::array<double, 36> cov;
 	for (int i=0;i<9;i++)
-		cov[i/3*6 + i%3]=StateBuffer_[(unsigned char)(idx_state_-1)].P_(i/3*nState_ + i%3);
+		cov[i/3*6 + i%3]=StateBuffer_[(unsigned char)(idx_state_-1)].P_(i/3*N_STATE + i%3);
 	for (int i=0;i<9;i++)
-		cov[i/3*6 + (i%3+3)]=StateBuffer_[(unsigned char)(idx_state_-1)].P_(i/3*nState_ + (i%3+6));
+		cov[i/3*6 + (i%3+3)]=StateBuffer_[(unsigned char)(idx_state_-1)].P_(i/3*N_STATE + (i%3+6));
 	for (int i=0;i<9;i++)
-		cov[(i/3+3)*6 + i%3]=StateBuffer_[(unsigned char)(idx_state_-1)].P_((i/3+6)*nState_ + i%3);
+		cov[(i/3+3)*6 + i%3]=StateBuffer_[(unsigned char)(idx_state_-1)].P_((i/3+6)*N_STATE + i%3);
 	for (int i=0;i<9;i++)
-		cov[(i/3+3)*6 + (i%3+3)]=StateBuffer_[(unsigned char)(idx_state_-1)].P_((i/3+6)*nState_ + (i%3+6));
+		cov[(i/3+3)*6 + (i%3+3)]=StateBuffer_[(unsigned char)(idx_state_-1)].P_((i/3+6)*N_STATE + (i%3+6));
 	msgPose_.pose.covariance = cov;
 	pubPose_.publish(msgPose_);
 
@@ -445,7 +445,7 @@ void SSF_Core::predictProcessCovariance(const double dt){
 	// Stephan Weiss and Roland Siegwart.
 	// Real-Time Metric State Estimation for Modular Vision-Inertial Systems.
 	// IEEE International Conference on Robotics and Automation. Shanghai, China, 2011
-	Fd_ = Eigen::Matrix<double,nState_,nState_>::Identity();
+	Fd_ = Eigen::Matrix<double,N_STATE,N_STATE>::Identity();
 	Fd_.block(0,3,3,3) = dt*eye3;
 	Fd_.block(0,6,3,3) = A;
 	Fd_.block(0,9,3,3) = B;

@@ -8,7 +8,7 @@
 #include "pose_sensor.h"
 #include <ssf_core/eigen_utils.h>
 
-#define nMeas_ 7 // measurement size
+#define N_MEAS 7 // measurement size
 PoseSensorHandler::PoseSensorHandler(Measurements* meas) :
   MeasurementHandler(meas)
 {
@@ -54,9 +54,9 @@ void PoseSensorHandler::measurementCallback(const geometry_msgs::PoseWithCovaria
   // init variables
   State state_old;
   ros::Time time_old = msg->header.stamp;
-  Eigen::Matrix<double, nMeas_, nState_> H_old;
-  Eigen::Matrix<double, nMeas_, 1> r_old;
-  Eigen::Matrix<double, nMeas_, nMeas_> R;
+  Eigen::Matrix<double, N_MEAS, N_STATE> H_old;
+  Eigen::Matrix<double, N_MEAS, 1> r_old;
+  Eigen::Matrix<double, N_MEAS, N_MEAS> R;
 
   H_old.setZero();
   R.setZero();
@@ -95,7 +95,7 @@ void PoseSensorHandler::measurementCallback(const geometry_msgs::PoseWithCovaria
   {
     const double s_zp = n_zp_ * n_zp_;
     const double s_zq = n_zq_ * n_zq_;
-    R = (Eigen::Matrix<double, nMeas_, 1>() << s_zp, s_zp, s_zp, s_zq, s_zq, s_zq, 1e-6).finished().asDiagonal();
+    R = (Eigen::Matrix<double, N_MEAS, 1>() << s_zp, s_zp, s_zp, s_zq, s_zq, s_zq, 1e-6).finished().asDiagonal();
   }
 
   // feedback for init case

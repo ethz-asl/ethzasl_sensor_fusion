@@ -30,8 +30,8 @@
 
 #include <vector>
 
-#define nState_ 25 /// error state size
-#define nStateBuffer_ 256	/// size of unsigned char, do not change!
+#define N_STATE 25 /// error state size
+#define N_STATE_BUFFER 256	/// size of unsigned char, do not change!
 #define HLI_EKF_STATE_SIZE 16 	/// number of states exchanged with external propagation. Here: p,v,q,bw,bw=16
 
 typedef dynamic_reconfigure::Server<ssf_core::SSF_CoreConfig> ReconfigureServer;
@@ -48,7 +48,7 @@ struct State
 	Eigen::Quaternion<double> q_ci_;	///21-24 // 19-21		camera-imu attitude calibration
 	Eigen::Matrix<double, 3, 1> p_ic_;	///25-27	// 22-24		camera-imu position calibration
 
-	Eigen::Matrix<double, nState_, nState_> P_;					/// error state covariance
+	Eigen::Matrix<double, N_STATE, N_STATE> P_;					/// error state covariance
 	Eigen::Matrix<double,3,1> w_m_;								/// angular velocity from IMU
 	Eigen::Quaternion<double> q_int_;	/// this is the integrated ang. vel. no corrections applied, to use for delta rot in external algos...
 	Eigen::Matrix<double,3,1> a_m_;								/// acc from IMU
@@ -58,9 +58,9 @@ struct State
 class SSF_Core {
 
 public:
-        typedef Eigen::Matrix<double, Eigen::Dynamic,nState_> MatrixXSd;
-        typedef Eigen::Matrix<double, nState_, 1> ErrorState;
-        typedef Eigen::Matrix<double, nState_, nState_> ErrorStateCov;
+        typedef Eigen::Matrix<double, Eigen::Dynamic,N_STATE> MatrixXSd;
+        typedef Eigen::Matrix<double, N_STATE, 1> ErrorState;
+        typedef Eigen::Matrix<double, N_STATE, N_STATE> ErrorStateCov;
 	///dynamic reconfigure
 	template<class T>
 	void registerCallback(void(T::*cb_func)(ssf_core::SSF_CoreConfig& config, uint32_t level), T* p_obj){
@@ -69,13 +69,13 @@ public:
 	/// big init routine
 	void initialize(const Eigen::Matrix<double, 3, 1> & p, const Eigen::Matrix<double, 3, 1> & v, const Eigen::Quaternion<double> & q,
 			const Eigen::Matrix<double, 3, 1> & b_w, const Eigen::Matrix<double, 3, 1> & b_a, const double & L, const Eigen::Quaternion<double> & q_wv,
-			const Eigen::Matrix<double, nState_, nState_> & P,
+			const Eigen::Matrix<double, N_STATE, N_STATE> & P,
 			const Eigen::Matrix<double, 3, 1> & w_m, const Eigen::Matrix<double, 3, 1> & a_m,
 			const Eigen::Matrix<double, 3, 1> & g, const Eigen::Quaternion<double> & q_ci, const Eigen::Matrix<double, 3, 1> & p_ic);
 
 
 	// dynamic reconfigure callbacks
-	int stateSize(){return nState_;};
+	int stateSize(){return N_STATE;};
 	void setFixedScale(bool fixedScale) {fixedScale_ = fixedScale;};
 	void setFixedBias(bool fixedBias) {fixedBias_ = fixedBias;};
 	void setFixedCalib(bool fixedCalib) {fixedCalib_ = fixedCalib;};
@@ -98,15 +98,15 @@ private:
 	const static int nMaxCorr_ = 50;	/// number of IMU measurements buffered for time correction actions
 	const static int QualityThres_ = 1e3;
 
-	Eigen::Matrix<double, nState_, nState_> Fd_;	/// discrete state propagation matrix
-	Eigen::Matrix<double, nState_, nState_> Qd_;	/// discrete propagation noise matrix
+	Eigen::Matrix<double, N_STATE, N_STATE> Fd_;	/// discrete state propagation matrix
+	Eigen::Matrix<double, N_STATE, N_STATE> Qd_;	/// discrete propagation noise matrix
 	MatrixXSd H_;	/// measurement matrix
 	Eigen::MatrixXd S_;	/// innovation matrix
 	Eigen::MatrixXd K_;	/// Kalman Gain
 
 
 	/// state variables
-	State StateBuffer_[nStateBuffer_];	/// EKF ringbuffer containing pretty much all info needed at time t
+	State StateBuffer_[N_STATE_BUFFER];	/// EKF ringbuffer containing pretty much all info needed at time t
 	unsigned char idx_state_;	/// pointer to state buffer at most recent state
 	unsigned char idx_P_;		/// pointer to state buffer at P latest propagated
 	unsigned char idx_time_;	/// pointer to state buffer at a specific time
@@ -117,7 +117,7 @@ private:
 	int qvw_inittimer_;
 	Eigen::Matrix<double,nBuff_,4> qbuff_;
 
-	Eigen::Matrix<double,nState_,1> correction_;	/// correction from EKF update
+	Eigen::Matrix<double,N_STATE,1> correction_;	/// correction from EKF update
 
 	double n_a_;	/// acc noise
 	double n_ba_;	/// bias acc noise
@@ -215,7 +215,7 @@ public:
       propPToIdx(idx_delaystate);
 
       R_type S;
-      Eigen::Matrix<double, nState_, R_type::RowsAtCompileTime> K;
+      Eigen::Matrix<double, N_STATE, R_type::RowsAtCompileTime> K;
       ErrorStateCov & P = StateBuffer_[idx_delaystate].P_;
 
       S = H_delayed * StateBuffer_[idx_delaystate].P_ * H_delayed.transpose() + R_delayed;

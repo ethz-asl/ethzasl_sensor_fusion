@@ -7,7 +7,7 @@
 
 #include "position_sensor.h"
 #include <ssf_core/eigen_utils.h>
-#define nMeas_ 9 // measurement size
+#define N_MEAS 9 // measurement size
 
 void PositionSensorHandler::subscribe(){
 
@@ -36,9 +36,9 @@ void PositionSensorHandler::measurementCallback(const ssf_updates::PositionWithC
 	// init variables
 	State state_old;
 	ros::Time time_old = msg->header.stamp;
-        Eigen::Matrix<double,nMeas_,nState_>H_old;
-        Eigen::Matrix<double, nMeas_, 1> r_old;
-        Eigen::Matrix<double,nMeas_,nMeas_> R;
+        Eigen::Matrix<double,N_MEAS,N_STATE>H_old;
+        Eigen::Matrix<double, N_MEAS, 1> r_old;
+        Eigen::Matrix<double,N_MEAS,N_MEAS> R;
 
         H_old.setZero();
         R.setZero();
@@ -52,7 +52,7 @@ void PositionSensorHandler::measurementCallback(const ssf_updates::PositionWithC
 //	R.block(3,3,6,6) = buffvec.asDiagonal(); // measurement noise for position, q_vw, q_ci
 
 	//  alternatively take fix covariance from reconfigure GUI
-	Eigen::Matrix<double,nMeas_,1> buffvec;
+	Eigen::Matrix<double,N_MEAS,1> buffvec;
 	buffvec  << n_zp_,n_zp_,n_zp_,1e-6,1e-6,1e-6,1e-6,1e-6,1e-6; // measurement noise for position, q_vw, q_ci
 	R = buffvec.asDiagonal();
 
