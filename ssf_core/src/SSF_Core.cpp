@@ -83,20 +83,7 @@ void SSF_Core::initialize(const Eigen::Matrix<double, 3, 1> & p, const Eigen::Ma
 	// init state buffer
 	for(int i=0; i<N_STATE_BUFFER;i++)
 	{
-		StateBuffer_[i].p_ = Eigen::Matrix<double, 3, 1>::Constant(0);
-		StateBuffer_[i].v_ = Eigen::Matrix<double, 3, 1>::Constant(0);
-		StateBuffer_[i].q_ = Eigen::Quaternion<double>(1, 0, 0, 0);
-		StateBuffer_[i].b_w_ = Eigen::Matrix<double, 3, 1>::Constant(0);
-		StateBuffer_[i].b_a_ = Eigen::Matrix<double, 3, 1>::Constant(0);
-		StateBuffer_[i].L_ = 0;
-		StateBuffer_[i].q_wv_ = Eigen::Quaternion<double>(1, 0, 0, 0);
-		StateBuffer_[i].q_ci_ = Eigen::Quaternion<double>(1, 0, 0, 0);
-		StateBuffer_[i].p_ic_ = Eigen::Matrix<double, 3, 1>::Constant(0);
-		StateBuffer_[i].P_ = Eigen::Matrix<double,N_STATE,N_STATE>::Constant(0);
-		StateBuffer_[i].w_m_ = Eigen::Matrix<double, 3, 1>::Constant(0);
-		StateBuffer_[i].q_int_ = Eigen::Quaternion<double>(1, 0, 0, 0);
-		StateBuffer_[i].a_m_ = Eigen::Matrix<double, 3, 1>::Constant(0);
-		StateBuffer_[i].time_ = 0;
+		StateBuffer_[i].reset();
 	}
 
 	idx_state_=0;

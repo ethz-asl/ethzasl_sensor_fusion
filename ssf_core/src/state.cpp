@@ -29,6 +29,7 @@ void State::reset(){
   q_int_.setIdentity();
 
   P_.setZero();
+  time_ = 0;
 }
 
 }; // end namespace ssf_core
