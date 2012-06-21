@@ -35,26 +35,28 @@
 #define N_STATE_BUFFER 256	/// size of unsigned char, do not change!
 #define HLI_EKF_STATE_SIZE 16 	/// number of states exchanged with external propagation. Here: p,v,q,bw,bw=16
 
+namespace ssf_core{
+
 typedef dynamic_reconfigure::Server<ssf_core::SSF_CoreConfig> ReconfigureServer;
 
-struct State
-{										//state	//error state	//Descr
-	Eigen::Matrix<double, 3, 1> p_;		/// 0- 2	//  0- 2		MAV position (IMU centered)
-	Eigen::Matrix<double, 3, 1> v_;		/// 3- 5	//  3- 5		MAV velocity
-	Eigen::Quaternion<double> q_;		/// 6- 9	//  6- 8		MAV attitude
-	Eigen::Matrix<double, 3, 1> b_w_;	///10-12	//  9-11		gyro biases
-	Eigen::Matrix<double, 3, 1> b_a_;	///13-15	// 12-14		acc biases
-	double L_;							///16	// 15			visual scale
-	Eigen::Quaternion<double> q_wv_;	///17-20	// 16-18		vision-world attitude drift
-	Eigen::Quaternion<double> q_ci_;	///21-24 // 19-21		camera-imu attitude calibration
-	Eigen::Matrix<double, 3, 1> p_ic_;	///25-27	// 22-24		camera-imu position calibration
-
-	Eigen::Matrix<double, N_STATE, N_STATE> P_;					/// error state covariance
-	Eigen::Matrix<double,3,1> w_m_;								/// angular velocity from IMU
-	Eigen::Quaternion<double> q_int_;	/// this is the integrated ang. vel. no corrections applied, to use for delta rot in external algos...
-	Eigen::Matrix<double,3,1> a_m_;								/// acc from IMU
-	double time_;												/// timestamp
-};
+//struct State
+//{										//state	//error state	//Descr
+//	Eigen::Matrix<double, 3, 1> p_;		/// 0- 2	//  0- 2		MAV position (IMU centered)
+//	Eigen::Matrix<double, 3, 1> v_;		/// 3- 5	//  3- 5		MAV velocity
+//	Eigen::Quaternion<double> q_;		/// 6- 9	//  6- 8		MAV attitude
+//	Eigen::Matrix<double, 3, 1> b_w_;	///10-12	//  9-11		gyro biases
+//	Eigen::Matrix<double, 3, 1> b_a_;	///13-15	// 12-14		acc biases
+//	double L_;							///16	// 15			visual scale
+//	Eigen::Quaternion<double> q_wv_;	///17-20	// 16-18		vision-world attitude drift
+//	Eigen::Quaternion<double> q_ci_;	///21-24 // 19-21		camera-imu attitude calibration
+//	Eigen::Matrix<double, 3, 1> p_ic_;	///25-27	// 22-24		camera-imu position calibration
+//
+//	Eigen::Matrix<double, N_STATE, N_STATE> P_;					/// error state covariance
+//	Eigen::Matrix<double,3,1> w_m_;								/// angular velocity from IMU
+//	Eigen::Quaternion<double> q_int_;	/// this is the integrated ang. vel. no corrections applied, to use for delta rot in external algos...
+//	Eigen::Matrix<double,3,1> a_m_;								/// acc from IMU
+//	double time_;												/// timestamp
+//};
 
 class SSF_Core {
 
@@ -240,5 +242,6 @@ public:
 
 };
 
+};// end namespace
 
 #endif /* SSF_CORE_H_ */

@@ -12,7 +12,7 @@
 #include <ssf_core/measurement.h>
 #include "position_sensor.h"
 
-class PositionMeasurements: public Measurements
+class PositionMeasurements: public ssf_core::Measurements
 {
 public:
 	PositionMeasurements()

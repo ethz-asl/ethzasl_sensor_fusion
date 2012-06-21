@@ -7,6 +7,8 @@
 
 #include <ssf_core/measurement.h>
 
+namespace ssf_core{
+
 Measurements::Measurements()
 {
 	// setup: initial pos, att, of measurement sensor
@@ -47,6 +49,4 @@ void Measurements::Config(ssf_core::SSF_CoreConfig& config, uint32_t level){
 	}
 }
 
-
-
-
+}; // end namespace

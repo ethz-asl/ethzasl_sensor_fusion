@@ -12,7 +12,7 @@
 #include <ssf_core/measurement.h>
 #include "pose_sensor.h"
 
-class PoseMeasurements : public Measurements
+class PoseMeasurements : public ssf_core::Measurements
 {
 public:
   PoseMeasurements()
@@ -45,7 +45,7 @@ private:
   {
     Eigen::Matrix<double, 3, 1> p, v, b_w, b_a, g, w_m, a_m;
     Eigen::Quaternion<double> q, q_wv;
-    SSF_Core::ErrorStateCov P;
+    ssf_core::SSF_Core::ErrorStateCov P;
 
     // init values
     g << 0, 0, 9.81; // gravity

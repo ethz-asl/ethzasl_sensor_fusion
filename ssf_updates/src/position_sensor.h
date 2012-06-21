@@ -12,7 +12,7 @@
 #include <ssf_updates/PositionWithCovarianceStamped.h>
 
 
-class PositionSensorHandler: public MeasurementHandler
+class PositionSensorHandler: public ssf_core::MeasurementHandler
 {
 	// measurements
 	Eigen::Matrix<double, 3, 1> z_p_;
@@ -24,7 +24,7 @@ class PositionSensorHandler: public MeasurementHandler
 	void noiseConfig(ssf_core::SSF_CoreConfig& config, uint32_t level);
 
 public:
-	PositionSensorHandler(Measurements* meas):MeasurementHandler(meas){subscribe();}
+	PositionSensorHandler(ssf_core::Measurements* meas):MeasurementHandler(meas){subscribe();}
 };
 
 #endif /* POSITION_SENSOR_H */

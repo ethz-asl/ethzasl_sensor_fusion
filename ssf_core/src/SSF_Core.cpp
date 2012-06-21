@@ -9,6 +9,8 @@
 #include "calcQ.h"
 #include <ssf_core/eigen_utils.h>
 
+namespace ssf_core{
+
 /// debug output to check misbehavior of Eigen
 template<class T>
 bool checkForNumeric(T vec, int size, const std::string & info)
@@ -746,3 +748,6 @@ void SSF_Core::DynConfig(ssf_core::SSF_CoreConfig& config, uint32_t level){
 		this->setDELAY(config.delay);
 //	}
 }
+
+
+}; // end namespace

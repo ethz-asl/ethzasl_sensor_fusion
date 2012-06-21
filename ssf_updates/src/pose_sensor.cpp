@@ -9,7 +9,7 @@
 #include <ssf_core/eigen_utils.h>
 
 #define N_MEAS 7 // measurement size
-PoseSensorHandler::PoseSensorHandler(Measurements* meas) :
+PoseSensorHandler::PoseSensorHandler(ssf_core::Measurements* meas) :
   MeasurementHandler(meas)
 {
   ros::NodeHandle pnh("~");
@@ -52,7 +52,7 @@ void PoseSensorHandler::measurementCallback(const geometry_msgs::PoseWithCovaria
   //					<< "type is: " << typeid(msg).name());
 
   // init variables
-  State state_old;
+  ssf_core::State state_old;
   ros::Time time_old = msg->header.stamp;
   Eigen::Matrix<double, N_MEAS, N_STATE> H_old;
   Eigen::Matrix<double, N_MEAS, 1> r_old;

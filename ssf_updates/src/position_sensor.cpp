@@ -34,7 +34,7 @@ void PositionSensorHandler::measurementCallback(const ssf_updates::PositionWithC
 	//					<< "type is: " << typeid(msg).name());
 
 	// init variables
-	State state_old;
+        ssf_core::State state_old;
 	ros::Time time_old = msg->header.stamp;
         Eigen::Matrix<double,N_MEAS,N_STATE>H_old;
         Eigen::Matrix<double, N_MEAS, 1> r_old;

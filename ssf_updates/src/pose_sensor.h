@@ -10,7 +10,7 @@
 
 #include <ssf_core/measurement.h>
 
-class PoseSensorHandler : public MeasurementHandler
+class PoseSensorHandler : public ssf_core::MeasurementHandler
 {
 private:
   // measurements
@@ -29,7 +29,7 @@ private:
 
 public:
   PoseSensorHandler();
-  PoseSensorHandler(Measurements* meas);
+  PoseSensorHandler(ssf_core::Measurements* meas);
 };
 
 #endif /* POSE_SENSOR_H */

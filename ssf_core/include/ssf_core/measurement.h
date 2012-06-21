@@ -10,6 +10,8 @@
 
 #include <ssf_core/SSF_Core.h>
 
+namespace ssf_core{
+
 class MeasurementHandler;
 
 class Measurements
@@ -52,8 +54,6 @@ public:
 	virtual ~MeasurementHandler() {}
 };
 
-
-
-
+}; // end namespace
 
 #endif /* MEASUREMENT_H */
