@@ -90,19 +90,20 @@ void SSF_Core::initialize(const Eigen::Matrix<double, 3, 1> & p, const Eigen::Ma
 	idx_P_=0;
 	idx_time_=0;
 
-	StateBuffer_[idx_state_].p_ = p;
-	StateBuffer_[idx_state_].v_ = v;
-	StateBuffer_[idx_state_].q_ = q;
-	StateBuffer_[idx_state_].b_w_ = b_w;
-	StateBuffer_[idx_state_].b_a_ = b_a;
-	StateBuffer_[idx_state_].L_ = L;
-	StateBuffer_[idx_state_].q_wv_ = q_wv;
-	StateBuffer_[idx_state_].q_ci_ = q_ci;
-	StateBuffer_[idx_state_].p_ic_ = p_ic;
-	StateBuffer_[idx_state_].w_m_ = w_m;
-	StateBuffer_[idx_state_].q_int_ = StateBuffer_[idx_state_].q_wv_;
-	StateBuffer_[idx_state_].a_m_ = a_m;
-	StateBuffer_[idx_state_].time_ = ros::Time::now().toSec();
+	State & state = StateBuffer_[idx_state_];
+	state.p_ = p;
+	state.v_ = v;
+	state.q_ = q;
+	state.b_w_ = b_w;
+	state.b_a_ = b_a;
+	state.L_ = L;
+	state.q_wv_ = q_wv;
+	state.q_ci_ = q_ci;
+	state.p_ic_ = p_ic;
+	state.w_m_ = w_m;
+	state.q_int_ = state.q_wv_;
+	state.a_m_ = a_m;
+	state.time_ = ros::Time::now().toSec();
 
 	if (P.maxCoeff()==0 && P.minCoeff()==0)
 		StateBuffer_[idx_P_].P_ <<  0.016580786012789, 0.012199934386656, -0.001458808893504, 0.021111179657363, 0.007427567799788, 0.000037801439852, 0.001171469788518, -0.001169015812942, 0.000103349776558, -0.000003813309102, 0.000015542937454, -0.000004252270155, -0.000344432741256, -0.000188322508425, -0.000003798930056, 0.002878474013131, 0.000479648737527, 0.000160244196007, 0.000012449379372, -0.000025211583296, -0.000029240408089, -0.000001069329869, -0.001271299967766, -0.000133670678392, -0.003059838896447
@@ -140,10 +141,6 @@ void SSF_Core::initialize(const Eigen::Matrix<double, 3, 1> & p, const Eigen::Ma
 	qvw_inittimer_=1;
 	qbuff_=Eigen::Matrix<double,nBuff_,4>::Constant(0);
 
-	// increase state pointers
-	idx_state_++;
-	idx_P_++;
-
 	// init external propagation
 	msgCorrect_.header.stamp = ros::Time::now();
 	msgCorrect_.header.seq = 0;
@@ -153,24 +150,28 @@ void SSF_Core::initialize(const Eigen::Matrix<double, 3, 1> & p, const Eigen::Ma
 	msgCorrect_.linear_acceleration.x = 0;
 	msgCorrect_.linear_acceleration.y = 0;
 	msgCorrect_.linear_acceleration.z = 0;
-	msgCorrect_.state[0] = StateBuffer_[(unsigned char)(idx_state_-1)].p_[0];
-	msgCorrect_.state[1] = StateBuffer_[(unsigned char)(idx_state_-1)].p_[1];
-	msgCorrect_.state[2] = StateBuffer_[(unsigned char)(idx_state_-1)].p_[2];
-	msgCorrect_.state[3] = StateBuffer_[(unsigned char)(idx_state_-1)].v_[0];
-	msgCorrect_.state[4] = StateBuffer_[(unsigned char)(idx_state_-1)].v_[1];
-	msgCorrect_.state[5] = StateBuffer_[(unsigned char)(idx_state_-1)].v_[2];
-	msgCorrect_.state[6] = StateBuffer_[(unsigned char)(idx_state_-1)].q_.w();
-	msgCorrect_.state[7] = StateBuffer_[(unsigned char)(idx_state_-1)].q_.x();
-	msgCorrect_.state[8] = StateBuffer_[(unsigned char)(idx_state_-1)].q_.y();
-	msgCorrect_.state[9] = StateBuffer_[(unsigned char)(idx_state_-1)].q_.z();
-	msgCorrect_.state[10] = StateBuffer_[(unsigned char)(idx_state_-1)].b_w_[0];
-	msgCorrect_.state[11] = StateBuffer_[(unsigned char)(idx_state_-1)].b_w_[1];
-	msgCorrect_.state[12] = StateBuffer_[(unsigned char)(idx_state_-1)].b_w_[2];
-	msgCorrect_.state[13] = StateBuffer_[(unsigned char)(idx_state_-1)].b_a_[0];
-	msgCorrect_.state[14] = StateBuffer_[(unsigned char)(idx_state_-1)].b_a_[1];
-	msgCorrect_.state[15] = StateBuffer_[(unsigned char)(idx_state_-1)].b_a_[2];
+	msgCorrect_.state[0] = state.p_[0];
+	msgCorrect_.state[1] = state.p_[1];
+	msgCorrect_.state[2] = state.p_[2];
+	msgCorrect_.state[3] = state.v_[0];
+	msgCorrect_.state[4] = state.v_[1];
+	msgCorrect_.state[5] = state.v_[2];
+	msgCorrect_.state[6] = state.q_.w();
+	msgCorrect_.state[7] = state.q_.x();
+	msgCorrect_.state[8] = state.q_.y();
+	msgCorrect_.state[9] = state.q_.z();
+	msgCorrect_.state[10] = state.b_w_[0];
+	msgCorrect_.state[11] = state.b_w_[1];
+	msgCorrect_.state[12] = state.b_w_[2];
+	msgCorrect_.state[13] = state.b_a_[0];
+	msgCorrect_.state[14] = state.b_a_[1];
+	msgCorrect_.state[15] = state.b_a_[2];
 	msgCorrect_.flag=sensor_fusion_comm::ExtEkf::initialization;
 	pubCorrect_.publish(msgCorrect_);
+
+        // increase state pointers
+        idx_state_++;
+        idx_P_++;
 
 	initialized_=true;
 }
