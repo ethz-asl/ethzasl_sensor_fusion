@@ -39,29 +39,9 @@ namespace ssf_core{
 
 typedef dynamic_reconfigure::Server<ssf_core::SSF_CoreConfig> ReconfigureServer;
 
-//struct State
-//{										//state	//error state	//Descr
-//	Eigen::Matrix<double, 3, 1> p_;		/// 0- 2	//  0- 2		MAV position (IMU centered)
-//	Eigen::Matrix<double, 3, 1> v_;		/// 3- 5	//  3- 5		MAV velocity
-//	Eigen::Quaternion<double> q_;		/// 6- 9	//  6- 8		MAV attitude
-//	Eigen::Matrix<double, 3, 1> b_w_;	///10-12	//  9-11		gyro biases
-//	Eigen::Matrix<double, 3, 1> b_a_;	///13-15	// 12-14		acc biases
-//	double L_;							///16	// 15			visual scale
-//	Eigen::Quaternion<double> q_wv_;	///17-20	// 16-18		vision-world attitude drift
-//	Eigen::Quaternion<double> q_ci_;	///21-24 // 19-21		camera-imu attitude calibration
-//	Eigen::Matrix<double, 3, 1> p_ic_;	///25-27	// 22-24		camera-imu position calibration
-//
-//	Eigen::Matrix<double, N_STATE, N_STATE> P_;					/// error state covariance
-//	Eigen::Matrix<double,3,1> w_m_;								/// angular velocity from IMU
-//	Eigen::Quaternion<double> q_int_;	/// this is the integrated ang. vel. no corrections applied, to use for delta rot in external algos...
-//	Eigen::Matrix<double,3,1> a_m_;								/// acc from IMU
-//	double time_;												/// timestamp
-//};
-
 class SSF_Core {
 
 public:
-//        typedef Eigen::Matrix<double, Eigen::Dynamic,N_STATE> MatrixXSd;
         typedef Eigen::Matrix<double, N_STATE, 1> ErrorState;
         typedef Eigen::Matrix<double, N_STATE, N_STATE> ErrorStateCov;
 	///dynamic reconfigure
@@ -79,18 +59,6 @@ public:
 
 	// dynamic reconfigure callbacks
 	int stateSize(){return N_STATE;};
-	void setFixedScale(bool fixedScale) {fixedScale_ = fixedScale;};
-	void setFixedBias(bool fixedBias) {fixedBias_ = fixedBias;};
-	void setFixedCalib(bool fixedCalib) {fixedCalib_ = fixedCalib;};
-	void setNoiseAcc(double val) {n_a_ = val;};
-	void setNoiseAccBias(double val) {n_ba_ = val;};
-	void setNoiseGyr(double val) {n_w_ = val;};
-	void setNoiseGyrBias(double val) {n_bw_ = val;};
-	void setNoiseScale(double val) {n_L_ = val;};
-	void setNoiseWV(double val) {n_qwv_ = val;};
-	void setNoiseQCI(double val) {n_qci_ = val;};
-	void setNoisePIC(double val) {n_pic_ = val;};
-	void setDELAY(double val) {DELAY_ = val;};
 
 	SSF_Core();
 	~SSF_Core();
@@ -103,10 +71,6 @@ private:
 
 	Eigen::Matrix<double, N_STATE, N_STATE> Fd_;	/// discrete state propagation matrix
 	Eigen::Matrix<double, N_STATE, N_STATE> Qd_;	/// discrete propagation noise matrix
-//	MatrixXSd H_;	/// measurement matrix
-//	Eigen::MatrixXd S_;	/// innovation matrix
-//	Eigen::MatrixXd K_;	/// Kalman Gain
-
 
 	/// state variables
 	State StateBuffer_[N_STATE_BUFFER];	/// EKF ringbuffer containing pretty much all info needed at time t
@@ -122,26 +86,18 @@ private:
 
 	Eigen::Matrix<double,N_STATE,1> correction_;	/// correction from EKF update
 
-	double n_a_;	/// acc noise
-	double n_ba_;	/// bias acc noise
-	double n_w_;	/// gyro noise
-	double n_bw_;	/// bias gyro noise
-	double n_L_;	/// scale drift noise
-	double n_qwv_;	/// vision world attitude drift noise
-	double n_qci_;	/// imu-cam attitude drift noise
-	double n_pic_;	/// imu-cam position drift noise
-	double DELAY_;	/// const time delay of measurements
+        /// dynamic reconfigure config
+	ssf_core::SSF_CoreConfig config_;
 
 	Eigen::Matrix<double, 3, 3> R_IW_; 		/// Rot IMU->World
 	Eigen::Matrix<double, 3, 3> R_CI_;  	/// Rot Camera->IMU
 	Eigen::Matrix<double, 3, 3> R_WV_;  	/// Rot World->Vision
 
-	/// dynamic reconfigure variables
-	bool fixedScale_;
-	bool fixedBias_;
-	bool fixedCalib_;
-	bool predictionMade_;
-	bool initialized_;
+
+        bool initialized_;
+        bool predictionMade_;
+
+	// static parameters
 	bool data_playback_ ;//< used to determine if internal states get overwritten by the external state prediction (online) or internal state prediction is performed (offline / logs)
 
 	enum{NO_UP,GOOD_UP, FUZZY_UP};

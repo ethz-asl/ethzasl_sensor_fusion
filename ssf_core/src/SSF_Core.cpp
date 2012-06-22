@@ -360,18 +360,22 @@ void SSF_Core::propagateState(const double dt )
 
 void SSF_Core::predictProcessCovariance(const double dt){
 
+        typedef const Eigen::Matrix<double, 3, 3> ConstMatrix3;
+        typedef const Eigen::Matrix<double, 3, 1> ConstVector3;
+
 	// noises
-	double na = n_a_;// / sqrt(dt);
+	double na = config_.noise_acc;// / sqrt(dt);
 	Eigen::Vector3d nav = Eigen::Vector3d(na,na,na);
-	double nba= n_ba_;// * sqrt(dt);
+	double nba= config_.noise_accbias;// * sqrt(dt);
 	Eigen::Vector3d nbav = Eigen::Vector3d(nba,nba,nba);
-	double nw = n_w_;// / sqrt(dt);
+	double nw = config_.noise_gyr;// / sqrt(dt);
 	Eigen::Vector3d nwv = Eigen::Vector3d(nw,nw,nw);
-	double nbw= n_bw_;// * sqrt(dt);
+	double nbw= config_.noise_gyrbias;// * sqrt(dt);
 	Eigen::Vector3d nbwv = Eigen::Vector3d(nbw,nbw,nbw);
-	Eigen::Vector3d nqwvv = Eigen::Vector3d (n_qwv_,n_qwv_,n_qwv_);
-	Eigen::Vector3d nqciv = Eigen::Vector3d (n_qci_,n_qci_,n_qci_);
-	Eigen::Vector3d npicv = Eigen::Vector3d (n_pic_,n_pic_,n_pic_);
+
+	Eigen::Vector3d nqwvv = Eigen::Vector3d::Constant(config_.noise_qwv);
+	Eigen::Vector3d nqciv = Eigen::Vector3d::Constant(config_.noise_qci);
+	Eigen::Vector3d npicv = Eigen::Vector3d::Constant(config_.noise_pic);
 
 	// bias corrected IMU readings
 	Eigen::Matrix<double,3,1> ew = StateBuffer_[idx_P_].w_m_ - StateBuffer_[idx_P_].b_w_;
@@ -408,7 +412,7 @@ void SSF_Core::predictProcessCovariance(const double dt){
 	Fd_.block(6,6,3,3) = E;
 	Fd_.block(6,9,3,3) = F;
 
-	calc_Q(dt, StateBuffer_[idx_P_].q_, ew, ea, nav, nbav, nwv, nbwv, n_L_, nqwvv, nqciv, npicv, Qd_);
+	calc_Q(dt, StateBuffer_[idx_P_].q_, ew, ea, nav, nbav, nwv, nbwv, config_.noise_scale, nqwvv, nqciv, npicv, Qd_);
 	StateBuffer_[idx_P_].P_ = Fd_ *  StateBuffer_[(unsigned char)(idx_P_-1)].P_ * Fd_.transpose() + Qd_;
 
 	idx_P_++;
@@ -451,7 +455,7 @@ unsigned char SSF_Core::getClosestState(State* timestate, ros::Time tstamp, doub
 
 	unsigned char idx = (unsigned char)(idx_state_-1);
 	double timedist = 1e100;
-	double timenow = tstamp.toSec()-delay-DELAY_;
+	double timenow = tstamp.toSec()-delay-config_.delay;
 
 	while (fabs(timenow-StateBuffer_[idx].time_)<timedist) // timedist decreases continuously until best point reached... then rises again
 	{
@@ -486,11 +490,11 @@ void SSF_Core::propPToIdx(unsigned char idx)
 bool SSF_Core::applyCorrection(unsigned char idx_delaystate, const ErrorState & res_delayed, double fuzzythres)
 {
 	static int seq_m = 0;
-	if(fixedScale_){
+	if(config_.fixed_scale){
 		correction_(15) = 0; //scale
 	}
 
-	if(fixedBias_){
+	if(config_.fixed_bias){
 		correction_(9) = 0;  //acc bias x
 		correction_(10) = 0; //acc bias y
 		correction_(11) = 0; //acc bias z
@@ -499,7 +503,7 @@ bool SSF_Core::applyCorrection(unsigned char idx_delaystate, const ErrorState & 
 		correction_(14) = 0; //gyro bias z
 	}
 
-	if(fixedCalib_){
+	if(config_.fixed_calib){
 		correction_(19) = 0; //q_ic roll
 		correction_(20) = 0; //q_ic pitch
 		correction_(21) = 0; //q_ic yaw
@@ -640,21 +644,22 @@ void SSF_Core::Config(ssf_core::SSF_CoreConfig& config, uint32_t level){
 
 
 void SSF_Core::DynConfig(ssf_core::SSF_CoreConfig& config, uint32_t level){
-//	if(level & ssf_core::SSF_Core_MISC)
-//	{
-		this->setFixedScale(config.fixed_scale);
-		this->setFixedBias(config.fixed_bias);
-		this->setFixedCalib(config.fixed_calib);
-		this->setNoiseAcc(config.noise_acc);
-		this->setNoiseAccBias(config.noise_accbias);
-		this->setNoiseGyr(config.noise_gyr);
-		this->setNoiseGyrBias(config.noise_gyrbias);
-		this->setNoiseScale(config.noise_scale);
-		this->setNoiseWV(config.noise_qwv);
-		this->setNoiseQCI(config.noise_qci);
-		this->setNoisePIC(config.noise_pic);
-		this->setDELAY(config.delay);
-//	}
+////	if(level & ssf_core::SSF_Core_MISC)
+////	{
+//		this->setFixedScale(config.fixed_scale);
+//		this->setFixedBias(config.fixed_bias);
+//		this->setFixedCalib(config.fixed_calib);
+//		this->setNoiseAcc(config.noise_acc);
+//		this->setNoiseAccBias(config.noise_accbias);
+//		this->setNoiseGyr(config.noise_gyr);
+//		this->setNoiseGyrBias(config.noise_gyrbias);
+//		this->setNoiseScale(config.noise_scale);
+//		this->setNoiseWV(config.noise_qwv);
+//		this->setNoiseQCI(config.noise_qci);
+//		this->setNoisePIC(config.noise_pic);
+//		this->setDELAY(config.delay);
+////	}
+  config_ = config;
 }
 
 double SSF_Core::getMedian(const Eigen::Matrix<double, nBuff_, 1> & data)
