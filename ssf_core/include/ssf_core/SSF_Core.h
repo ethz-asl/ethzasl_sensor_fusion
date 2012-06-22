@@ -61,7 +61,7 @@ typedef dynamic_reconfigure::Server<ssf_core::SSF_CoreConfig> ReconfigureServer;
 class SSF_Core {
 
 public:
-        typedef Eigen::Matrix<double, Eigen::Dynamic,N_STATE> MatrixXSd;
+//        typedef Eigen::Matrix<double, Eigen::Dynamic,N_STATE> MatrixXSd;
         typedef Eigen::Matrix<double, N_STATE, 1> ErrorState;
         typedef Eigen::Matrix<double, N_STATE, N_STATE> ErrorStateCov;
 	///dynamic reconfigure
@@ -103,9 +103,9 @@ private:
 
 	Eigen::Matrix<double, N_STATE, N_STATE> Fd_;	/// discrete state propagation matrix
 	Eigen::Matrix<double, N_STATE, N_STATE> Qd_;	/// discrete propagation noise matrix
-	MatrixXSd H_;	/// measurement matrix
-	Eigen::MatrixXd S_;	/// innovation matrix
-	Eigen::MatrixXd K_;	/// Kalman Gain
+//	MatrixXSd H_;	/// measurement matrix
+//	Eigen::MatrixXd S_;	/// innovation matrix
+//	Eigen::MatrixXd K_;	/// Kalman Gain
 
 
 	/// state variables
