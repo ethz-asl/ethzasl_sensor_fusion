@@ -250,10 +250,10 @@ void SSF_Core::stateCallback(const sensor_fusion_comm::ExtEkfConstPtr & msg){
 
 	if(!predictionMade_)
 	{
-		if (fabs(StateBuffer_[(unsigned char)(idx_state_)].time_-StateBuffer_[(unsigned char)(idx_state_-1)].time_)>5)
+		if (fabs(StateBuffer_[(idx_state_)].time_-StateBuffer_[(unsigned char)(idx_state_-1)].time_)>5)
 		{
 			ROS_WARN_STREAM_THROTTLE(2, "large time-gap re-initializing to last state\n");
-			StateBuffer_[(unsigned char)(idx_state_-1)].time_=StateBuffer_[(unsigned char)(idx_state_)].time_;
+			StateBuffer_[(unsigned char)(idx_state_-1)].time_=StateBuffer_[(idx_state_)].time_;
 			StateBuffer_[(unsigned char)(idx_state_)].time_=0;
 			return;	// // early abort // // (if timegap too big)
 		}
@@ -297,37 +297,15 @@ void SSF_Core::stateCallback(const sensor_fusion_comm::ExtEkfConstPtr & msg){
 
 	predictionMade_ = true;
 
-	msgPose_.header.stamp = ros::Time::now();
-	msgPose_.header.seq = seq;
-	geometry_msgs::Quaternion msgq;
-	msgq.w=StateBuffer_[(unsigned char)(idx_state_-1)].q_.w(); msgq.x=StateBuffer_[(unsigned char)(idx_state_-1)].q_.x(); msgq.y=StateBuffer_[(unsigned char)(idx_state_-1)].q_.y(); msgq.z=StateBuffer_[(unsigned char)(idx_state_-1)].q_.z();
-	msgPose_.pose.pose.orientation = msgq;
-	geometry_msgs::Point msgp;
-	msgp.x=StateBuffer_[(unsigned char)(idx_state_-1)].p_(0); msgp.y=StateBuffer_[(unsigned char)(idx_state_-1)].p_(1); msgp.z=StateBuffer_[(unsigned char)(idx_state_-1)].p_(2);
-	msgPose_.pose.pose.position = msgp;
-	// put position and orientation covariance together...
-	boost::array<double, 36> cov;
-	for (int i=0;i<9;i++)
-		cov[i/3*6 + i%3]=StateBuffer_[(unsigned char)(idx_state_-1)].P_(i/3*N_STATE + i%3);
-	for (int i=0;i<9;i++)
-		cov[i/3*6 + (i%3+3)]=StateBuffer_[(unsigned char)(idx_state_-1)].P_(i/3*N_STATE + (i%3+6));
-	for (int i=0;i<9;i++)
-		cov[(i/3+3)*6 + i%3]=StateBuffer_[(unsigned char)(idx_state_-1)].P_((i/3+6)*N_STATE + i%3);
-	for (int i=0;i<9;i++)
-		cov[(i/3+3)*6 + (i%3+3)]=StateBuffer_[(unsigned char)(idx_state_-1)].P_((i/3+6)*N_STATE + (i%3+6));
-	msgPose_.pose.covariance = cov;
-	pubPose_.publish(msgPose_);
+        msgPose_.header.stamp = msg->header.stamp;
+        msgPose_.header.seq = msg->header.seq;
 
-	msgPoseCtrl_.header.stamp = ros::Time::now();
-	msgPoseCtrl_.header.seq = seq;
-	msgq.w=StateBuffer_[(unsigned char)(idx_state_-1)].q_.w(); msgq.x=StateBuffer_[(unsigned char)(idx_state_-1)].q_.x(); msgq.y=StateBuffer_[(unsigned char)(idx_state_-1)].q_.y(); msgq.z=StateBuffer_[(unsigned char)(idx_state_-1)].q_.z();
-	msgPoseCtrl_.pose.orientation = msgq;
-	msgp.x=StateBuffer_[(unsigned char)(idx_state_-1)].p_(0); msgp.y=StateBuffer_[(unsigned char)(idx_state_-1)].p_(1); msgp.z=StateBuffer_[(unsigned char)(idx_state_-1)].p_(2);
-	msgPoseCtrl_.pose.position = msgp;
-	geometry_msgs::Vector3 msgv;
-	msgv.x=StateBuffer_[(unsigned char)(idx_state_-1)].v_(0); msgv.y=StateBuffer_[(unsigned char)(idx_state_-1)].v_(1); msgv.z=StateBuffer_[(unsigned char)(idx_state_-1)].v_(2);
-	msgPoseCtrl_.velocity = msgv;
-	pubPoseCrtl_.publish(msgPoseCtrl_);
+        StateBuffer_[(unsigned char)(idx_state_-1)].getPoseMsg(msgPose_);
+        pubPose_.publish(msgPose_);
+
+        msgPoseCtrl_.header = msgPose_.header;
+        StateBuffer_[(unsigned char)(idx_state_-1)].getStateMsg(msgPoseCtrl_);
+        pubPoseCrtl_.publish(msgPoseCtrl_);
 
 	seq++;
 }
