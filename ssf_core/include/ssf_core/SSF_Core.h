@@ -180,23 +180,8 @@ private:
 
 
 
-	double getMedian(Eigen::Matrix<double,nBuff_,1> data)
-	{
-		std::vector<double> mediandistvec;
-		for(int i=0; i<nBuff_; ++i)
-			mediandistvec.push_back(data(i));
+	double getMedian(const Eigen::Matrix<double,nBuff_,1> & data);
 
-		if(mediandistvec.size()>0)
-		{
-			std::vector<double>::iterator first = mediandistvec.begin();
-			std::vector<double>::iterator last = mediandistvec.end();
-			std::vector<double>::iterator middle = first + std::floor((last - first) / 2);
-			std::nth_element(first, middle, last); // can specify comparator as optional 4th arg
-			return *middle;
-		}
-		else
-			return 0;
-	}
 
 public:
   // Interface for update sensors

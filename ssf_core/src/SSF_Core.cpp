@@ -737,5 +737,23 @@ void SSF_Core::DynConfig(ssf_core::SSF_CoreConfig& config, uint32_t level){
 //	}
 }
 
+double SSF_Core::getMedian(const Eigen::Matrix<double, nBuff_, 1> & data)
+{
+  std::vector<double> mediandistvec;
+  mediandistvec.reserve(nBuff_);
+  for (int i = 0; i < nBuff_; ++i)
+    mediandistvec.push_back(data(i));
+
+  if (mediandistvec.size() > 0)
+  {
+    std::vector<double>::iterator first = mediandistvec.begin();
+    std::vector<double>::iterator last = mediandistvec.end();
+    std::vector<double>::iterator middle = first + std::floor((last - first) / 2);
+    std::nth_element(first, middle, last); // can specify comparator as optional 4th arg
+    return *middle;
+  }
+  else
+    return 0;
+}
 
 }; // end namespace
