@@ -13,6 +13,7 @@
 #include <vector>
 #include <ssf_core/eigen_conversions.h>
 #include <sensor_fusion_comm/ExtState.h>
+#include <sensor_fusion_comm/DoubleArrayStamped.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 
 #define N_STATE 25 /// error state size
@@ -61,11 +62,15 @@ public:
 
   /// assembles a PoseWithCovarianceStamped message from the state
   /** it does not set the header */
-  void getPoseMsg(geometry_msgs::PoseWithCovarianceStamped & pose);
+  void toPoseMsg(geometry_msgs::PoseWithCovarianceStamped & pose);
 
   /// assembles an ExtState message from the state
   /** it does not set the header */
-  void getStateMsg(sensor_fusion_comm::ExtState & state);
+  void toExtStateMsg(sensor_fusion_comm::ExtState & state);
+
+  /// assembles a DoubleArrayStamped message from the state
+  /** it does not set the header */
+  void toStateMsg(sensor_fusion_comm::DoubleArrayStamped & state);
 
 
 

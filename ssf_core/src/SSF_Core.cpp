@@ -217,12 +217,12 @@ void SSF_Core::imuCallback(const sensor_msgs::ImuConstPtr & msg){
 	msgPose_.header.stamp = msg->header.stamp;
 	msgPose_.header.seq = msg->header.seq;
 
-	StateBuffer_[(unsigned char)(idx_state_-1)].getPoseMsg(msgPose_);
-	pubPose_.publish(msgPose_);
+        StateBuffer_[(unsigned char)(idx_state_-1)].toPoseMsg(msgPose_);
+        pubPose_.publish(msgPose_);
 
-	msgPoseCtrl_.header = msgPose_.header;
-	StateBuffer_[(unsigned char)(idx_state_-1)].getStateMsg(msgPoseCtrl_);
-	pubPoseCrtl_.publish(msgPoseCtrl_);
+        msgPoseCtrl_.header = msgPose_.header;
+        StateBuffer_[(unsigned char)(idx_state_-1)].toExtStateMsg(msgPoseCtrl_);
+        pubPoseCrtl_.publish(msgPoseCtrl_);
 
 	seq++;
 }
@@ -300,11 +300,11 @@ void SSF_Core::stateCallback(const sensor_fusion_comm::ExtEkfConstPtr & msg){
         msgPose_.header.stamp = msg->header.stamp;
         msgPose_.header.seq = msg->header.seq;
 
-        StateBuffer_[(unsigned char)(idx_state_-1)].getPoseMsg(msgPose_);
+        StateBuffer_[(unsigned char)(idx_state_-1)].toPoseMsg(msgPose_);
         pubPose_.publish(msgPose_);
 
         msgPoseCtrl_.header = msgPose_.header;
-        StateBuffer_[(unsigned char)(idx_state_-1)].getStateMsg(msgPoseCtrl_);
+        StateBuffer_[(unsigned char)(idx_state_-1)].toExtStateMsg(msgPoseCtrl_);
         pubPoseCrtl_.publish(msgPoseCtrl_);
 
 	seq++;
@@ -512,7 +512,7 @@ bool SSF_Core::applyCorrection(unsigned char idx_delaystate, const ErrorState & 
 
 	// store old values in case of fuzzy tracking
 	// TODO: what to do with attitude? augment measurement noise?
-	Eigen::Quaternion<double> buff_q = StateBuffer_[idx_delaystate].q_;
+
 	Eigen::Matrix<double,3,1> buff_bw = StateBuffer_[idx_delaystate].b_w_;
 	Eigen::Matrix<double,3,1> buff_ba = StateBuffer_[idx_delaystate].b_a_;
 	double buff_L = StateBuffer_[idx_delaystate].L_;
@@ -625,34 +625,7 @@ bool SSF_Core::applyCorrection(unsigned char idx_delaystate, const ErrorState & 
 
 	// publish state
 	msgState_.header = msgCorrect_.header;
-	msgState_.data[0] = StateBuffer_[(unsigned char)(idx_state_-1)].p_[0];
-	msgState_.data[1] = StateBuffer_[(unsigned char)(idx_state_-1)].p_[1];
-	msgState_.data[2] = StateBuffer_[(unsigned char)(idx_state_-1)].p_[2];
-	msgState_.data[3] = StateBuffer_[(unsigned char)(idx_state_-1)].v_[0];
-	msgState_.data[4] = StateBuffer_[(unsigned char)(idx_state_-1)].v_[1];
-	msgState_.data[5] = StateBuffer_[(unsigned char)(idx_state_-1)].v_[2];
-	msgState_.data[6] = StateBuffer_[(unsigned char)(idx_state_-1)].q_.w();
-	msgState_.data[7] = StateBuffer_[(unsigned char)(idx_state_-1)].q_.x();
-	msgState_.data[8] = StateBuffer_[(unsigned char)(idx_state_-1)].q_.y();
-	msgState_.data[9] = StateBuffer_[(unsigned char)(idx_state_-1)].q_.z();
-	msgState_.data[10] = StateBuffer_[(unsigned char)(idx_state_-1)].b_w_[0];
-	msgState_.data[11] = StateBuffer_[(unsigned char)(idx_state_-1)].b_w_[1];
-	msgState_.data[12] = StateBuffer_[(unsigned char)(idx_state_-1)].b_w_[2];
-	msgState_.data[13] = StateBuffer_[(unsigned char)(idx_state_-1)].b_a_[0];
-	msgState_.data[14] = StateBuffer_[(unsigned char)(idx_state_-1)].b_a_[1];
-	msgState_.data[15] = StateBuffer_[(unsigned char)(idx_state_-1)].b_a_[2];
-	msgState_.data[16] = StateBuffer_[(unsigned char)(idx_state_-1)].L_;
-	msgState_.data[17] = StateBuffer_[(unsigned char)(idx_state_-1)].q_wv_.w();
-	msgState_.data[18] = StateBuffer_[(unsigned char)(idx_state_-1)].q_wv_.x();
-	msgState_.data[19] = StateBuffer_[(unsigned char)(idx_state_-1)].q_wv_.y();
-	msgState_.data[20] = StateBuffer_[(unsigned char)(idx_state_-1)].q_wv_.z();
-	msgState_.data[21] = StateBuffer_[(unsigned char)(idx_state_-1)].q_ci_.w();
-	msgState_.data[22] = StateBuffer_[(unsigned char)(idx_state_-1)].q_ci_.x();
-	msgState_.data[23] = StateBuffer_[(unsigned char)(idx_state_-1)].q_ci_.y();
-	msgState_.data[24] = StateBuffer_[(unsigned char)(idx_state_-1)].q_ci_.z();
-	msgState_.data[25] = StateBuffer_[(unsigned char)(idx_state_-1)].p_ic_[0];
-	msgState_.data[26] = StateBuffer_[(unsigned char)(idx_state_-1)].p_ic_[1];
-	msgState_.data[27] = StateBuffer_[(unsigned char)(idx_state_-1)].p_ic_[2];
+	StateBuffer_[(unsigned char)(idx_state_-1)].toStateMsg(msgState_);
 	pubState_.publish(msgState_);
 	seq_m++;
 
