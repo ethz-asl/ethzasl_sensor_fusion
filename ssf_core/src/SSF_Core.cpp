@@ -191,16 +191,18 @@ void SSF_Core::imuCallback(const sensor_msgs::ImuConstPtr & msg){
 	StateBuffer_[idx_state_].w_m_ << msg->angular_velocity.x, msg->angular_velocity.y, msg->angular_velocity.z;
 
 	// remove acc spikes (TODO: find a cleaner way to do this)
-	static Eigen::Matrix<double,3,1> last_am = Eigen::Matrix<double,3,1>(0, 0, 0);
-	if(StateBuffer_[idx_state_].a_m_.norm() > 50) StateBuffer_[idx_state_].a_m_ = last_am;
-	else last_am = StateBuffer_[idx_state_].a_m_;
+	static Eigen::Matrix<double, 3, 1> last_am = Eigen::Matrix<double, 3, 1>(0, 0, 0);
+	if (StateBuffer_[idx_state_].a_m_.norm() > 50)
+	  StateBuffer_[idx_state_].a_m_ = last_am;
+	else
+	  last_am = StateBuffer_[idx_state_].a_m_;
 
 	if(!predictionMade_)
 	{
 		if (fabs(StateBuffer_[(unsigned char)(idx_state_)].time_-StateBuffer_[(unsigned char)(idx_state_-1)].time_)>5)
 		{
 			ROS_WARN_STREAM_THROTTLE(2, "large time-gap re-initializing to last state\n");
-			StateBuffer_[(unsigned char)(idx_state_-1)].time_=StateBuffer_[(unsigned char)(idx_state_)].time_;
+			StateBuffer_[(unsigned char)(idx_state_-1)].time_=StateBuffer_[(idx_state_)].time_;
 			return; 	// // early abort // // (if timegap too big)
 		}
 	}
@@ -212,36 +214,14 @@ void SSF_Core::imuCallback(const sensor_msgs::ImuConstPtr & msg){
 
 	predictionMade_ = true;
 
-	msgPose_.header.stamp = ros::Time::now();
-	msgPose_.header.seq = seq;
-	geometry_msgs::Quaternion msgq;
-	msgq.w=StateBuffer_[(unsigned char)(idx_state_-1)].q_.w(); msgq.x=StateBuffer_[(unsigned char)(idx_state_-1)].q_.x(); msgq.y=StateBuffer_[(unsigned char)(idx_state_-1)].q_.y(); msgq.z=StateBuffer_[(unsigned char)(idx_state_-1)].q_.z();
-	msgPose_.pose.pose.orientation = msgq;
-	geometry_msgs::Point msgp;
-	msgp.x=StateBuffer_[(unsigned char)(idx_state_-1)].p_(0); msgp.y=StateBuffer_[(unsigned char)(idx_state_-1)].p_(1); msgp.z=StateBuffer_[(unsigned char)(idx_state_-1)].p_(2);
-	msgPose_.pose.pose.position = msgp;
-	// put position and orientation covariance together...
-	boost::array<double, 36> cov;
-	for (int i=0;i<9;i++)
-		cov[i/3*6 + i%3]=StateBuffer_[(unsigned char)(idx_state_-1)].P_(i/3*N_STATE + i%3);
-	for (int i=0;i<9;i++)
-		cov[i/3*6 + (i%3+3)]=StateBuffer_[(unsigned char)(idx_state_-1)].P_(i/3*N_STATE + (i%3+6));
-	for (int i=0;i<9;i++)
-		cov[(i/3+3)*6 + i%3]=StateBuffer_[(unsigned char)(idx_state_-1)].P_((i/3+6)*N_STATE + i%3);
-	for (int i=0;i<9;i++)
-		cov[(i/3+3)*6 + (i%3+3)]=StateBuffer_[(unsigned char)(idx_state_-1)].P_((i/3+6)*N_STATE + (i%3+6));
-	msgPose_.pose.covariance = cov;
+	msgPose_.header.stamp = msg->header.stamp;
+	msgPose_.header.seq = msg->header.seq;
+
+	StateBuffer_[(unsigned char)(idx_state_-1)].getPoseMsg(msgPose_);
 	pubPose_.publish(msgPose_);
 
-	msgPoseCtrl_.header.stamp = ros::Time::now();
-	msgPoseCtrl_.header.seq = seq;
-	msgq.w=StateBuffer_[(unsigned char)(idx_state_-1)].q_.w(); msgq.x=StateBuffer_[(unsigned char)(idx_state_-1)].q_.x(); msgq.y=StateBuffer_[(unsigned char)(idx_state_-1)].q_.y(); msgq.z=StateBuffer_[(unsigned char)(idx_state_-1)].q_.z();
-	msgPoseCtrl_.pose.orientation = msgq;
-	msgp.x=StateBuffer_[(unsigned char)(idx_state_-1)].p_(0); msgp.y=StateBuffer_[(unsigned char)(idx_state_-1)].p_(1); msgp.z=StateBuffer_[(unsigned char)(idx_state_-1)].p_(2);
-	msgPoseCtrl_.pose.position = msgp;
-	geometry_msgs::Vector3 msgv;
-	msgv.x=StateBuffer_[(unsigned char)(idx_state_-1)].v_(0); msgv.y=StateBuffer_[(unsigned char)(idx_state_-1)].v_(1); msgv.z=StateBuffer_[(unsigned char)(idx_state_-1)].v_(2);
-	msgPoseCtrl_.velocity = msgv;
+	msgPoseCtrl_.header = msgPose_.header;
+	StateBuffer_[(unsigned char)(idx_state_-1)].getStateMsg(msgPoseCtrl_);
 	pubPoseCrtl_.publish(msgPoseCtrl_);
 
 	seq++;
@@ -262,9 +242,11 @@ void SSF_Core::stateCallback(const sensor_fusion_comm::ExtEkfConstPtr & msg){
 	StateBuffer_[idx_state_].w_m_ << msg->angular_velocity.x, msg->angular_velocity.y, msg->angular_velocity.z;
 
 	// remove acc spikes (TODO: find a cleaner way to do this)
-	static Eigen::Matrix<double,3,1> last_am = Eigen::Matrix<double,3,1>(0, 0, 0);
-	if(StateBuffer_[idx_state_].a_m_.norm() > 50) StateBuffer_[idx_state_].a_m_ = last_am;
-	else last_am = StateBuffer_[idx_state_].a_m_;
+	static Eigen::Matrix<double, 3, 1> last_am = Eigen::Matrix<double, 3, 1>(0, 0, 0);
+	if (StateBuffer_[idx_state_].a_m_.norm() > 50)
+	  StateBuffer_[idx_state_].a_m_ = last_am;
+	else
+	  last_am = StateBuffer_[idx_state_].a_m_;
 
 	if(!predictionMade_)
 	{

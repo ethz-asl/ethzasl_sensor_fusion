@@ -32,4 +32,35 @@ void State::reset(){
   time_ = 0;
 }
 
+void State::getPoseCovariance(geometry_msgs::PoseWithCovariance::_covariance_type & cov)
+{
+  assert(cov.size() == 36);
+
+  for (int i = 0; i < 9; i++)
+    cov[i / 3 * 6 + i % 3] = P_(i / 3 * N_STATE + i % 3);
+
+  for (int i = 0; i < 9; i++)
+    cov[i / 3 * 6 + (i % 3 + 3)] = P_(i / 3 * N_STATE + (i % 3 + 6));
+
+  for (int i = 0; i < 9; i++)
+    cov[(i / 3 + 3) * 6 + i % 3] = P_((i / 3 + 6) * N_STATE + i % 3);
+
+  for (int i = 0; i < 9; i++)
+    cov[(i / 3 + 3) * 6 + (i % 3 + 3)] = P_((i / 3 + 6) * N_STATE + (i % 3 + 6));
+}
+
+void State::getPoseMsg(geometry_msgs::PoseWithCovarianceStamped & pose)
+{
+  eigen_conversions::vector3dToPoint(p_, pose.pose.pose.position);
+  eigen_conversions::quaternionToMsg(q_, pose.pose.pose.orientation);
+  getPoseCovariance(pose.pose.covariance);
+}
+
+void State::getStateMsg(sensor_fusion_comm::ExtState & state)
+{
+  eigen_conversions::vector3dToPoint(p_, state.pose.position);
+  eigen_conversions::quaternionToMsg(q_, state.pose.orientation);
+  eigen_conversions::vector3dToPoint(v_, state.velocity);
+}
+
 }; // end namespace ssf_core

@@ -10,6 +10,10 @@
 
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
+#include <vector>
+#include <ssf_core/eigen_conversions.h>
+#include <sensor_fusion_comm/ExtState.h>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
 
 #define N_STATE 25 /// error state size
 
@@ -46,7 +50,25 @@ public:
 
   double time_; ///< time of this state estimate
 
-  void reset(); ///< resets the state: 3D vectors: 0; quaternion: unit quaternion; scale: 1; time:0; Error covariance: zeros
+  /// resets the state
+  /**
+   * 3D vectors: 0; quaternion: unit quaternion; scale: 1; time:0; Error covariance: zeros
+   */
+  void reset();
+
+  /// writes the covariance corresponding to position and attitude to cov
+  void getPoseCovariance(geometry_msgs::PoseWithCovariance::_covariance_type & cov);
+
+  /// assembles a PoseWithCovarianceStamped message from the state
+  /** it does not set the header */
+  void getPoseMsg(geometry_msgs::PoseWithCovarianceStamped & pose);
+
+  /// assembles an ExtState message from the state
+  /** it does not set the header */
+  void getStateMsg(sensor_fusion_comm::ExtState & state);
+
+
+
 };
 
 }
