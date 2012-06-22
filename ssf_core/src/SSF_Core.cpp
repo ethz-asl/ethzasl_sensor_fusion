@@ -362,38 +362,36 @@ void SSF_Core::predictProcessCovariance(const double dt){
 
         typedef const Eigen::Matrix<double, 3, 3> ConstMatrix3;
         typedef const Eigen::Matrix<double, 3, 1> ConstVector3;
+        typedef Eigen::Vector3d Vector3;
 
 	// noises
-	double na = config_.noise_acc;// / sqrt(dt);
-	Eigen::Vector3d nav = Eigen::Vector3d(na,na,na);
-	double nba= config_.noise_accbias;// * sqrt(dt);
-	Eigen::Vector3d nbav = Eigen::Vector3d(nba,nba,nba);
-	double nw = config_.noise_gyr;// / sqrt(dt);
-	Eigen::Vector3d nwv = Eigen::Vector3d(nw,nw,nw);
-	double nbw= config_.noise_gyrbias;// * sqrt(dt);
-	Eigen::Vector3d nbwv = Eigen::Vector3d(nbw,nbw,nbw);
+        ConstVector3 nav = Vector3::Constant(config_.noise_acc /* / sqrt(dt) */);
+        ConstVector3 nbav = Vector3::Constant(config_.noise_accbias /* * sqrt(dt) */);
 
-	Eigen::Vector3d nqwvv = Eigen::Vector3d::Constant(config_.noise_qwv);
-	Eigen::Vector3d nqciv = Eigen::Vector3d::Constant(config_.noise_qci);
-	Eigen::Vector3d npicv = Eigen::Vector3d::Constant(config_.noise_pic);
+        ConstVector3 nwv = Vector3::Constant(config_.noise_gyr /* / sqrt(dt) */);
+        ConstVector3 nbwv = Vector3::Constant(config_.noise_gyrbias /* * sqrt(dt) */);
+
+	ConstVector3 nqwvv = Eigen::Vector3d::Constant(config_.noise_qwv);
+	ConstVector3 nqciv = Eigen::Vector3d::Constant(config_.noise_qci);
+	ConstVector3 npicv = Eigen::Vector3d::Constant(config_.noise_pic);
 
 	// bias corrected IMU readings
-	Eigen::Matrix<double,3,1> ew = StateBuffer_[idx_P_].w_m_ - StateBuffer_[idx_P_].b_w_;
-	Eigen::Matrix<double,3,1> ea = StateBuffer_[idx_P_].a_m_ - StateBuffer_[idx_P_].b_a_;
+	ConstVector3 ew = StateBuffer_[idx_P_].w_m_ - StateBuffer_[idx_P_].b_w_;
+	ConstVector3 ea = StateBuffer_[idx_P_].a_m_ - StateBuffer_[idx_P_].b_a_;
 
-	Eigen::Matrix<double,3,3> a_sk = skew(ea);
-	Eigen::Matrix<double,3,3> w_sk = skew(ew);
-	Eigen::Matrix<double,3,3> eye3 = Eigen::Matrix<double,3,3>::Identity();
+	ConstMatrix3 a_sk = skew(ea);
+	ConstMatrix3 w_sk = skew(ew);
+	ConstMatrix3 eye3 = Eigen::Matrix<double,3,3>::Identity();
 
-	Eigen::Matrix<double,3,3> C_eq = StateBuffer_[idx_P_].q_.toRotationMatrix();
+	ConstMatrix3 C_eq = StateBuffer_[idx_P_].q_.toRotationMatrix();
 
-	Eigen::Matrix<double,3,3> Ca3 = C_eq*a_sk;
-	Eigen::Matrix<double,3,3> A = Ca3*(-dt*dt/2*eye3 + dt*dt*dt/6*w_sk - dt*dt*dt*dt/24*w_sk*w_sk);
-	Eigen::Matrix<double,3,3> B = Ca3*(dt*dt*dt/6*eye3 - dt*dt*dt*dt/24*w_sk + dt*dt*dt*dt*dt/120*w_sk*w_sk);
-	Eigen::Matrix<double,3,3> D = -A;
-	Eigen::Matrix<double,3,3> E = eye3 - dt*w_sk + dt*dt/2*w_sk*w_sk;
-	Eigen::Matrix<double,3,3> F = -dt*eye3 + dt*dt/2*w_sk - dt*dt*dt/6*(w_sk*w_sk);
-	Eigen::Matrix<double,3,3> C = Ca3*F;
+	ConstMatrix3 Ca3 = C_eq*a_sk;
+	ConstMatrix3 A = Ca3*(-dt*dt/2*eye3 + dt*dt*dt/6*w_sk - dt*dt*dt*dt/24*w_sk*w_sk);
+	ConstMatrix3 B = Ca3*(dt*dt*dt/6*eye3 - dt*dt*dt*dt/24*w_sk + dt*dt*dt*dt*dt/120*w_sk*w_sk);
+	ConstMatrix3 D = -A;
+	ConstMatrix3 E = eye3 - dt*w_sk + dt*dt/2*w_sk*w_sk;
+	ConstMatrix3 F = -dt*eye3 + dt*dt/2*w_sk - dt*dt*dt/6*(w_sk*w_sk);
+	ConstMatrix3 C = Ca3*F;
 
 	// discrete error state propagation Matrix Fd according to:
 	// Stephan Weiss and Roland Siegwart.
