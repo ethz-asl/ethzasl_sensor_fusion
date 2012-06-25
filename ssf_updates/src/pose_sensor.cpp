@@ -113,18 +113,18 @@ void PoseSensorHandler::measurementCallback(const geometry_msgs::PoseWithCovaria
 
   // preprocess for elements in H matrix
   Eigen::Matrix<double, 3, 1> vecold;
-  vecold = (state_old.p_ + C_q.transpose() * state_old.p_ic_) * state_old.L_;
+  vecold = (state_old.p_ + C_q.transpose() * state_old.p_ci_) * state_old.L_;
   Eigen::Matrix<double, 3, 3> skewold = skew(vecold);
 
-  Eigen::Matrix<double, 3, 3> pic_sk = skew(state_old.p_ic_);
+  Eigen::Matrix<double, 3, 3> pci_sk = skew(state_old.p_ci_);
 
   // construct H matrix using H-blockx :-)
   // position:
   H_old.block<3, 3> (0, 0) = C_wv.transpose() * state_old.L_; // p
-  H_old.block<3, 3> (0, 6) = -C_wv.transpose() * C_q.transpose() * pic_sk * state_old.L_; // q
-  H_old.block<3, 1> (0, 15) = C_wv.transpose() * C_q.transpose() * state_old.p_ic_ + C_wv.transpose() * state_old.p_; // L
+  H_old.block<3, 3> (0, 6) = -C_wv.transpose() * C_q.transpose() * pci_sk * state_old.L_; // q
+  H_old.block<3, 1> (0, 15) = C_wv.transpose() * C_q.transpose() * state_old.p_ci_ + C_wv.transpose() * state_old.p_; // L
   H_old.block<3, 3> (0, 16) = -C_wv.transpose() * skewold; // q_wv
-  H_old.block<3, 3> (0, 22) = C_wv.transpose() * C_q.transpose() * state_old.L_; //p_ic
+  H_old.block<3, 3> (0, 22) = C_wv.transpose() * C_q.transpose() * state_old.L_; //p_ci
 
   // attitude
   H_old.block<3, 3> (3, 6) = C_ci; // q
@@ -134,7 +134,7 @@ void PoseSensorHandler::measurementCallback(const geometry_msgs::PoseWithCovaria
 
   // construct residuals
   // position
-  r_old.block<3, 1> (0, 0) = z_p_ - C_wv.transpose() * (state_old.p_ + C_q.transpose() * state_old.p_ic_) * state_old.L_;
+  r_old.block<3, 1> (0, 0) = z_p_ - C_wv.transpose() * (state_old.p_ + C_q.transpose() * state_old.p_ci_) * state_old.L_;
 
   // attitude
   Eigen::Quaternion<double> q_err;

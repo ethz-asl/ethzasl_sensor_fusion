@@ -54,7 +54,7 @@ void SSF_Core::initialize(const Eigen::Matrix<double, 3, 1> & p, const Eigen::Ma
                           const Eigen::Quaternion<double> & q_wv, const Eigen::Matrix<double, N_STATE, N_STATE> & P,
                           const Eigen::Matrix<double, 3, 1> & w_m, const Eigen::Matrix<double, 3, 1> & a_m,
                           const Eigen::Matrix<double, 3, 1> & g, const Eigen::Quaternion<double> & q_ci,
-                          const Eigen::Matrix<double, 3, 1> & p_ic)
+                          const Eigen::Matrix<double, 3, 1> & p_ci)
 {
   initialized_ = false;
   predictionMade_ = false;
@@ -79,7 +79,7 @@ void SSF_Core::initialize(const Eigen::Matrix<double, 3, 1> & p, const Eigen::Ma
   state.L_ = L;
   state.q_wv_ = q_wv;
   state.q_ci_ = q_ci;
-  state.p_ic_ = p_ic;
+  state.p_ci_ = p_ci;
   state.w_m_ = w_m;
   state.q_int_ = state.q_wv_;
   state.a_m_ = a_m;
@@ -265,7 +265,7 @@ void SSF_Core::stateCallback(const sensor_fusion_comm::ExtEkfConstPtr & msg)
     StateBuffer_[idx_state_].L_ = StateBuffer_[(unsigned char)(idx_state_ - 1)].L_;
     StateBuffer_[idx_state_].q_wv_ = StateBuffer_[(unsigned char)(idx_state_ - 1)].q_wv_;
     StateBuffer_[idx_state_].q_ci_ = StateBuffer_[(unsigned char)(idx_state_ - 1)].q_ci_;
-    StateBuffer_[idx_state_].p_ic_ = StateBuffer_[(unsigned char)(idx_state_ - 1)].p_ic_;
+    StateBuffer_[idx_state_].p_ci_ = StateBuffer_[(unsigned char)(idx_state_ - 1)].p_ci_;
     idx_state_++;
 
     hl_state_buf_ = *msg;
@@ -310,7 +310,7 @@ void SSF_Core::propagateState(const double dt)
   cur_state.L_ = prev_state.L_;
   cur_state.q_wv_ = prev_state.q_wv_;
   cur_state.q_ci_ = prev_state.q_ci_;
-  cur_state.p_ic_ = prev_state.p_ic_;
+  cur_state.p_ci_ = prev_state.p_ci_;
 
 //  Eigen::Quaternion<double> dq;
   Eigen::Matrix<double, 3, 1> dv;
@@ -498,9 +498,9 @@ bool SSF_Core::applyCorrection(unsigned char idx_delaystate, const ErrorState & 
     correction_(19) = 0; //q_ic roll
     correction_(20) = 0; //q_ic pitch
     correction_(21) = 0; //q_ic yaw
-    correction_(22) = 0; //p_ic x
-    correction_(23) = 0; //p_ic y
-    correction_(24) = 0; //p_ic z
+    correction_(22) = 0; //p_ci x
+    correction_(23) = 0; //p_ci y
+    correction_(24) = 0; //p_ci z
   }
 
   // state update:
@@ -515,7 +515,7 @@ bool SSF_Core::applyCorrection(unsigned char idx_delaystate, const ErrorState & 
   const double buff_L = delaystate.L_;
   const Eigen::Quaternion<double> buff_qwv = delaystate.q_wv_;
   const Eigen::Quaternion<double> buff_qci = delaystate.q_ci_;
-  const Eigen::Matrix<double, 3, 1> buff_pic = delaystate.p_ic_;
+  const Eigen::Matrix<double, 3, 1> buff_pic = delaystate.p_ci_;
 
   delaystate.p_ = delaystate.p_ + correction_.block<3, 1> (0, 0);
   delaystate.v_ = delaystate.v_ + correction_.block<3, 1> (3, 0);
@@ -540,7 +540,7 @@ bool SSF_Core::applyCorrection(unsigned char idx_delaystate, const ErrorState & 
   delaystate.q_ci_ = delaystate.q_ci_ * qbuff_qci;
   delaystate.q_ci_.normalize();
 
-  delaystate.p_ic_ = delaystate.p_ic_ + correction_.block<3, 1> (22, 0);
+  delaystate.p_ci_ = delaystate.p_ci_ + correction_.block<3, 1> (22, 0);
 
 	// update qbuff_ and check for fuzzy tracking
   if (qvw_inittimer_ > nBuff_)
@@ -564,7 +564,7 @@ bool SSF_Core::applyCorrection(unsigned char idx_delaystate, const ErrorState & 
       delaystate.L_ = buff_L;
       delaystate.q_wv_ = buff_qwv;
       delaystate.q_ci_ = buff_qci;
-      delaystate.p_ic_ = buff_pic;
+      delaystate.p_ci_ = buff_pic;
       correction_.block<16, 1> (9, 0) = Eigen::Matrix<double, 16, 1>::Zero();
       qbuff_q.setIdentity();
       qbuff_qwv.setIdentity();

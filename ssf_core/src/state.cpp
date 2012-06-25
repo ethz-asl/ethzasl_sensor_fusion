@@ -21,7 +21,7 @@ void State::reset(){
   L_ = 1.0;
   q_wv_.setIdentity();
   q_ci_.setIdentity();
-  p_ic_.setZero();
+  p_ci_.setZero();
 
   w_m_.setZero();
   a_m_.setZero();
@@ -90,9 +90,9 @@ void State::toStateMsg(sensor_fusion_comm::DoubleArrayStamped & state)
   state.data[22] = q_ci_.x();
   state.data[23] = q_ci_.y();
   state.data[24] = q_ci_.z();
-  state.data[25] = p_ic_[0];
-  state.data[26] = p_ic_[1];
-  state.data[27] = p_ic_[2];
+  state.data[25] = p_ci_[0];
+  state.data[26] = p_ci_[1];
+  state.data[27] = p_ci_[2];
 }
 
 }; // end namespace ssf_core

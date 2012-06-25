@@ -70,24 +70,24 @@ void PositionSensorHandler::measurementCallback(const ssf_updates::PositionWithC
 
 	// preprocess for elements in H matrix
 	Eigen::Matrix<double,3,1> vecold;
-	vecold = (state_old.p_+C_q.transpose()*state_old.p_ic_)*state_old.L_;
+	vecold = (state_old.p_+C_q.transpose()*state_old.p_ci_)*state_old.L_;
 	Eigen::Matrix<double,3,3> skewold = skew(vecold);
 
-	Eigen::Matrix<double,3,3> pic_sk = skew(state_old.p_ic_);
+	Eigen::Matrix<double,3,3> pci_sk = skew(state_old.p_ci_);
 
 	// construct H matrix using H-blockx :-)
 	// position
 	H_old.block<3,3>(0,0) = C_wv.transpose()*state_old.L_; // p
-	H_old.block<3,3>(0,6) = -C_wv.transpose()*C_q.transpose()*pic_sk*state_old.L_; // q
-	H_old.block<3,1>(0,15) = C_wv.transpose()*C_q.transpose()*state_old.p_ic_ + C_wv.transpose()*state_old.p_; // L
+	H_old.block<3,3>(0,6) = -C_wv.transpose()*C_q.transpose()*pci_sk*state_old.L_; // q
+	H_old.block<3,1>(0,15) = C_wv.transpose()*C_q.transpose()*state_old.p_ci_ + C_wv.transpose()*state_old.p_; // L
 	H_old.block<3,3>(0,16) = -C_wv.transpose()*skewold; // q_wv
-	H_old.block<3,3>(0,22) = C_wv.transpose()*C_q.transpose()*state_old.L_;	// use "camera"-IMU distance p_ic state here as position_sensor-IMU distance
+	H_old.block<3,3>(0,22) = C_wv.transpose()*C_q.transpose()*state_old.L_;	// use "camera"-IMU distance p_ci state here as position_sensor-IMU distance
 	H_old.block<3,3>(3,16) = Eigen::Matrix<double,3,3>::Identity();	// fix vision world drift q_wv since it does not exist here
 	H_old.block<3,3>(6,19) = Eigen::Matrix<double,3,3>::Identity();	// fix "camera"-IMU drift q_ci since it does not exist here
 
 	// construct residuals
 	// position
-	r_old.block<3,1>(0,0) = z_p_ - C_wv.transpose()*(state_old.p_ + C_q.transpose()*state_old.p_ic_)*state_old.L_;
+	r_old.block<3,1>(0,0) = z_p_ - C_wv.transpose()*(state_old.p_ + C_q.transpose()*state_old.p_ci_)*state_old.L_;
 	// vision world drift q_wv
 	r_old.block<3,1>(3,0) = -state_old.q_wv_.vec()/state_old.q_wv_.w()*2;
 	// "camera"-IMU drift q_ci

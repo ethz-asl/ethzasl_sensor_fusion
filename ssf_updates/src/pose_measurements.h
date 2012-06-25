@@ -20,9 +20,9 @@ public:
     addHandler(new PoseSensorHandler(this));
 
     ros::NodeHandle pnh("~");
-    pnh.param("init/p_ic/x", p_ic_[0], 0.0);
-    pnh.param("init/p_ic/y", p_ic_[1], 0.0);
-    pnh.param("init/p_ic/z", p_ic_[2], 0.0);
+    pnh.param("init/p_ci/x", p_ci_[0], 0.0);
+    pnh.param("init/p_ci/y", p_ci_[1], 0.0);
+    pnh.param("init/p_ci/z", p_ci_[2], 0.0);
 
     pnh.param("init/q_ci/w", q_ci_.w(), 1.0);
     pnh.param("init/q_ci/x", q_ci_.x(), 0.0);
@@ -38,7 +38,7 @@ public:
 
 private:
 
-  Eigen::Matrix<double, 3, 1> p_ic_; ///< initial distance camera-IMU
+  Eigen::Matrix<double, 3, 1> p_ci_; ///< initial distance camera-IMU
   Eigen::Quaternion<double> q_ci_; ///< initial rotation camera-IMU
 
   void init(double scale)
@@ -69,16 +69,16 @@ private:
     // calculate initial attitude and position based on sensor measurements
     q = (q_ci_ * q_cv_.conjugate() * q_wv).conjugate();
     q.normalize();
-    p = q_wv.conjugate().toRotationMatrix() * p_vc_ / scale - q.toRotationMatrix() * p_ic_;
+    p = q_wv.conjugate().toRotationMatrix() * p_vc_ / scale - q.toRotationMatrix() * p_ci_;
 
     // call initialization in core
-    ssf_core_.initialize(p, v, q, b_w, b_a, scale, q_wv, P, w_m, a_m, g, q_ci_, p_ic_);
+    ssf_core_.initialize(p, v, q, b_w, b_a, scale, q_wv, P, w_m, a_m, g, q_ci_, p_ci_);
 
     ROS_INFO_STREAM("filter initialized to: \n" <<
         "position: [" << p[0] << ", " << p[1] << ", " << p[2] << "]" << std::endl <<
         "scale:" << scale << std::endl <<
         "attitude (w,x,y,z): [" << q.w() << ", " << q.x() << ", " << q.y() << ", " << q.z() << std::endl <<
-        "p_ic: [" << p_ic_[0] << ", " << p_ic_[1] << ", " << p_ic_[2] << std::endl <<
+        "p_ci: [" << p_ci_[0] << ", " << p_ci_[1] << ", " << p_ci_[2] << std::endl <<
         "q_ci: (w,x,y,z): [" << q_ci_.w() << ", " << q_ci_.x() << ", " << q_ci_.y() << ", " << q_ci_.z() << "]");
   }
 };

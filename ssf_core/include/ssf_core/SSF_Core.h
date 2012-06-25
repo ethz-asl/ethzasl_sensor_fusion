@@ -45,7 +45,7 @@ public:
                   const Eigen::Matrix<double, 3, 1> & b_a, const double & L, const Eigen::Quaternion<double> & q_wv,
                   const Eigen::Matrix<double, N_STATE, N_STATE> & P, const Eigen::Matrix<double, 3, 1> & w_m,
                   const Eigen::Matrix<double, 3, 1> & a_m, const Eigen::Matrix<double, 3, 1> & g,
-                  const Eigen::Quaternion<double> & q_ci, const Eigen::Matrix<double, 3, 1> & p_ic);
+                  const Eigen::Quaternion<double> & q_ci, const Eigen::Matrix<double, 3, 1> & p_ci);
 
   /// retreive all state information at time t. Used to build H, residual and noise matrix by update sensors
   unsigned char getClosestState(State* timestate, ros::Time tstamp, double delay = 0.00);

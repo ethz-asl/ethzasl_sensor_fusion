@@ -39,7 +39,7 @@ public:
   double L_;                              ///< visual scale                     (16 / 15)
   Eigen::Quaternion<double> q_wv_;        ///< vision-world attitude drift      (17-20 / 16-18)
   Eigen::Quaternion<double> q_ci_;        ///< camera-imu attitude calibration  (21-24 / 19-21)
-  Eigen::Matrix<double, 3, 1> p_ic_;      ///< camera-imu position calibration  (25-27 / 22-24)
+  Eigen::Matrix<double, 3, 1> p_ci_;      ///< camera-imu position calibration  (25-27 / 22-24)
 
   // system inputs
   Eigen::Matrix<double,3,1> w_m_;         ///< angular velocity from IMU
