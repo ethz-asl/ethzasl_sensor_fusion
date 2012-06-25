@@ -12,28 +12,6 @@
 namespace ssf_core
 {
 
-/// debug output to check misbehavior of Eigen
-template<class T>
-  bool checkForNumeric(T vec, int size, const std::string & info)
-  {
-    for (int i = 0; i < size; i++)
-    {
-      if (isnan(vec[i]))
-      {
-        std::cout << "=== ERROR ===  " << info.c_str() << ": NAN at index " << i << std::endl;
-        //      ROS_BREAK();
-        return false;
-      }
-      if (isinf(vec[i]))
-      {
-        std::cout << "=== ERROR ===  " << info.c_str() << ": INF at index " << i << std::endl;
-        //      ROS_BREAK();
-        return false;
-      }
-    }
-    return true;
-  }
-
 SSF_Core::SSF_Core()
 {
   initialized_ = false;
