@@ -397,18 +397,18 @@ void SSF_Core::predictProcessCovariance(const double dt){
 	// Stephan Weiss and Roland Siegwart.
 	// Real-Time Metric State Estimation for Modular Vision-Inertial Systems.
 	// IEEE International Conference on Robotics and Automation. Shanghai, China, 2011
-	Fd_ = Eigen::Matrix<double,N_STATE,N_STATE>::Identity();
-	Fd_.block(0,3,3,3) = dt*eye3;
-	Fd_.block(0,6,3,3) = A;
-	Fd_.block(0,9,3,3) = B;
-	Fd_.block(0,12,3,3) = -C_eq*dt*dt/2;
+	Fd_.setIdentity();
+	Fd_.block<3,3>(0,3) = dt*eye3;
+	Fd_.block<3,3>(0,6) = A;
+	Fd_.block<3,3>(0,9) = B;
+	Fd_.block<3,3>(0,12) = -C_eq*dt*dt/2;
 
-	Fd_.block(3,6,3,3) = C;
-	Fd_.block(3,9,3,3) = D;
-	Fd_.block(3,12,3,3) = -C_eq*dt;
+	Fd_.block<3,3>(3,6) = C;
+	Fd_.block<3,3>(3,9) = D;
+	Fd_.block<3,3>(3,12) = -C_eq*dt;
 
-	Fd_.block(6,6,3,3) = E;
-	Fd_.block(6,9,3,3) = F;
+	Fd_.block<3,3>(6,6) = E;
+	Fd_.block<3,3>(6,9) = F;
 
 	calc_Q(dt, StateBuffer_[idx_P_].q_, ew, ea, nav, nbav, nwv, nbwv, config_.noise_scale, nqwvv, nqciv, npicv, Qd_);
 	StateBuffer_[idx_P_].P_ = Fd_ *  StateBuffer_[(unsigned char)(idx_P_-1)].P_ * Fd_.transpose() + Qd_;
