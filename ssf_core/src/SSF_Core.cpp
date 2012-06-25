@@ -450,20 +450,7 @@ bool SSF_Core::getStateAtIdx(State* timestate, unsigned char idx)
     return false;
   }
 
-  timestate->p_ = StateBuffer_[idx].p_;
-  timestate->v_ = StateBuffer_[idx].v_;
-  timestate->q_ = StateBuffer_[idx].q_;
-  timestate->b_w_ = StateBuffer_[idx].b_w_;
-  timestate->b_a_ = StateBuffer_[idx].b_a_;
-  timestate->L_ = StateBuffer_[idx].L_;
-  timestate->q_wv_ = StateBuffer_[idx].q_wv_;
-  timestate->q_ci_ = StateBuffer_[idx].q_ci_;
-  timestate->p_ic_ = StateBuffer_[idx].p_ic_;
-  timestate->P_ = StateBuffer_[idx].P_;
-  timestate->time_ = StateBuffer_[idx].time_;
-  timestate->w_m_ = StateBuffer_[idx].w_m_;
-  timestate->q_int_ = StateBuffer_[idx].q_int_;
-  timestate->a_m_ = StateBuffer_[idx].a_m_;
+  *timestate = StateBuffer_[idx];
 
   return true;
 }
