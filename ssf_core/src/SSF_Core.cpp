@@ -318,30 +318,33 @@ void SSF_Core::stateCallback(const sensor_fusion_comm::ExtEkfConstPtr & msg)
 
 void SSF_Core::propagateState(const double dt)
 {
+  // get references to current and previous state
+  State & cur_state = StateBuffer_[idx_state_];
+  State & prev_state = StateBuffer_[(unsigned char)(idx_state_ - 1)];
+
   // zero props:
-  StateBuffer_[idx_state_].b_w_ = StateBuffer_[(unsigned char)(idx_state_ - 1)].b_w_;
-  StateBuffer_[idx_state_].b_a_ = StateBuffer_[(unsigned char)(idx_state_ - 1)].b_a_;
-  StateBuffer_[idx_state_].L_ = StateBuffer_[(unsigned char)(idx_state_ - 1)].L_;
-  StateBuffer_[idx_state_].q_wv_ = StateBuffer_[(unsigned char)(idx_state_ - 1)].q_wv_;
-  StateBuffer_[idx_state_].q_ci_ = StateBuffer_[(unsigned char)(idx_state_ - 1)].q_ci_;
-  StateBuffer_[idx_state_].p_ic_ = StateBuffer_[(unsigned char)(idx_state_ - 1)].p_ic_;
+  cur_state.b_w_ = prev_state.b_w_;
+  cur_state.b_a_ = prev_state.b_a_;
+  cur_state.L_ = prev_state.L_;
+  cur_state.q_wv_ = prev_state.q_wv_;
+  cur_state.q_ci_ = prev_state.q_ci_;
+  cur_state.p_ic_ = prev_state.p_ic_;
 
   Eigen::Quaternion<double> dq;
   Eigen::Matrix<double, 3, 1> dv;
-  Eigen::Matrix<double, 3, 1> ew = StateBuffer_[idx_state_].w_m_ - StateBuffer_[idx_state_].b_w_;
-  Eigen::Matrix<double, 3, 1> ewold = StateBuffer_[(unsigned char)(idx_state_ - 1)].w_m_ - StateBuffer_[(unsigned char)(idx_state_ - 1)].b_w_;
-  Eigen::Matrix<double, 3, 1> ea = StateBuffer_[idx_state_].a_m_ - StateBuffer_[idx_state_].b_a_;
-  Eigen::Matrix<double, 3, 1> eaold = StateBuffer_[(unsigned char)(idx_state_ - 1)].a_m_ - StateBuffer_[(unsigned char)(idx_state_ - 1)].b_a_;
+  Eigen::Matrix<double, 3, 1> ew = cur_state.w_m_ - cur_state.b_w_;
+  Eigen::Matrix<double, 3, 1> ewold = prev_state.w_m_ - prev_state.b_w_;
+  Eigen::Matrix<double, 3, 1> ea = cur_state.a_m_ - cur_state.b_a_;
+  Eigen::Matrix<double, 3, 1> eaold = prev_state.a_m_ - prev_state.b_a_;
   Eigen::Matrix<double, 4, 4> Omega = omegaMatJPL(ew);
   Eigen::Matrix<double, 4, 4> OmegaOld = omegaMatJPL(ewold);
   Eigen::Matrix<double, 4, 4> OmegaMean = omegaMatJPL((ew + ewold) / 2);
 
   // zero order quaternion integration
-  //	StateBuffer_[idx_state_].q_ = (Eigen::Matrix<double,4,4>::Identity() + 0.5*Omega*dt)*StateBuffer_[(unsigned char)(idx_state_-1)].q_.coeffs();
+  //	cur_state.q_ = (Eigen::Matrix<double,4,4>::Identity() + 0.5*Omega*dt)*StateBuffer_[(unsigned char)(idx_state_-1)].q_.coeffs();
 
   // first order quaternion integration, this is kind of costly and may not add a lot to the quality of propagation...
-  int div;
-  div = 1;
+  int div = 1;
   Eigen::Matrix<double, 4, 4> MatExp;
   MatExp.setIdentity();
   OmegaMean *= 0.5 * dt;
@@ -356,16 +359,16 @@ void SSF_Core::propagateState(const double dt)
   const Eigen::Matrix<double, 4, 4> quat_int = MatExp + 1.0 / 48.0 * (Omega * OmegaOld - OmegaOld * Omega) * dt * dt;
 
   // first oder quaternion integration
-  StateBuffer_[idx_state_].q_.coeffs() = quat_int * StateBuffer_[(unsigned char)(idx_state_ - 1)].q_.coeffs();
-  StateBuffer_[idx_state_].q_.normalize();
+  cur_state.q_.coeffs() = quat_int * prev_state.q_.coeffs();
+  cur_state.q_.normalize();
 
   // first oder quaternion integration
-  StateBuffer_[idx_state_].q_int_.coeffs() = quat_int * StateBuffer_[(unsigned char)(idx_state_ - 1)].q_int_.coeffs();
-  StateBuffer_[idx_state_].q_int_.normalize();
+  cur_state.q_int_.coeffs() = quat_int * prev_state.q_int_.coeffs();
+  cur_state.q_int_.normalize();
 
-  dv = (StateBuffer_[idx_state_].q_.toRotationMatrix() * ea + StateBuffer_[(unsigned char)(idx_state_ - 1)].q_.toRotationMatrix() * eaold) / 2;
-  StateBuffer_[idx_state_].v_ = StateBuffer_[(unsigned char)(idx_state_ - 1)].v_ + (dv - g_) * dt;
-  StateBuffer_[idx_state_].p_ = StateBuffer_[(unsigned char)(idx_state_ - 1)].p_ + ((StateBuffer_[idx_state_].v_ + StateBuffer_[(unsigned char)(idx_state_ - 1)].v_) / 2 * dt);
+  dv = (cur_state.q_.toRotationMatrix() * ea + prev_state.q_.toRotationMatrix() * eaold) / 2;
+  cur_state.v_ = prev_state.v_ + (dv - g_) * dt;
+  cur_state.p_ = prev_state.p_ + ((cur_state.v_ + prev_state.v_) / 2 * dt);
   idx_state_++;
 }
 
