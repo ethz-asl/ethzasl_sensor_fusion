@@ -520,67 +520,69 @@ bool SSF_Core::applyCorrection(unsigned char idx_delaystate, const ErrorState & 
 	// store old values in case of fuzzy tracking
 	// TODO: what to do with attitude? augment measurement noise?
 
-	Eigen::Matrix<double,3,1> buff_bw = StateBuffer_[idx_delaystate].b_w_;
-	Eigen::Matrix<double,3,1> buff_ba = StateBuffer_[idx_delaystate].b_a_;
-	double buff_L = StateBuffer_[idx_delaystate].L_;
-	Eigen::Quaternion<double> buff_qwv = StateBuffer_[idx_delaystate].q_wv_;
-	Eigen::Quaternion<double> buff_qci = StateBuffer_[idx_delaystate].q_ci_;
-	Eigen::Matrix<double,3,1> buff_pic = StateBuffer_[idx_delaystate].p_ic_;
+	State & delaystate = StateBuffer_[idx_delaystate];
 
-	StateBuffer_[idx_delaystate].p_ = StateBuffer_[idx_delaystate].p_ + correction_.block(0,0,3,1);
-	StateBuffer_[idx_delaystate].v_ = StateBuffer_[idx_delaystate].v_ + correction_.block(3,0,3,1);
-	StateBuffer_[idx_delaystate].b_w_ = StateBuffer_[idx_delaystate].b_w_ + correction_.block(9,0,3,1);
-	StateBuffer_[idx_delaystate].b_a_ = StateBuffer_[idx_delaystate].b_a_ + correction_.block(12,0,3,1);
-	StateBuffer_[idx_delaystate].L_ = StateBuffer_[idx_delaystate].L_ + correction_(15);
-	if(StateBuffer_[idx_delaystate].L_<0)
+	const Eigen::Matrix<double,3,1> buff_bw = delaystate.b_w_;
+	const Eigen::Matrix<double,3,1> buff_ba = delaystate.b_a_;
+	const double buff_L = delaystate.L_;
+	const Eigen::Quaternion<double> buff_qwv = delaystate.q_wv_;
+	const Eigen::Quaternion<double> buff_qci = delaystate.q_ci_;
+	const Eigen::Matrix<double,3,1> buff_pic = delaystate.p_ic_;
+
+	delaystate.p_ = delaystate.p_ + correction_.block<3, 1> (0, 0);
+	delaystate.v_ = delaystate.v_ + correction_.block<3, 1> (3, 0);
+	delaystate.b_w_ = delaystate.b_w_ + correction_.block<3, 1> (9, 0);
+	delaystate.b_a_ = delaystate.b_a_ + correction_.block<3, 1> (12, 0);
+	delaystate.L_ = delaystate.L_ + correction_(15);
+	if (delaystate.L_ < 0)
 	{
-		ROS_WARN_STREAM_THROTTLE(1,"Negative scale detected: " << StateBuffer_[idx_delaystate].L_ <<  ". Correcting to 0.1");
-		StateBuffer_[idx_delaystate].L_=0.1;
+	  ROS_WARN_STREAM_THROTTLE(1,"Negative scale detected: " << delaystate.L_ << ". Correcting to 0.1");
+	  delaystate.L_ = 0.1;
 	}
 
 	Eigen::Quaternion<double> qbuff_q = quaternionFromSmallAngle(correction_.block<3,1>(6, 0));
-	StateBuffer_[idx_delaystate].q_ = StateBuffer_[idx_delaystate].q_ * qbuff_q;
-	StateBuffer_[idx_delaystate].q_.normalize();
+	delaystate.q_ = delaystate.q_ * qbuff_q;
+	delaystate.q_.normalize();
 
 	Eigen::Quaternion<double> qbuff_qwv = quaternionFromSmallAngle(correction_.block<3,1>(16,0));
-	StateBuffer_[idx_delaystate].q_wv_ = StateBuffer_[idx_delaystate].q_wv_*qbuff_qwv;
-	StateBuffer_[idx_delaystate].q_wv_.normalize();
+	delaystate.q_wv_ = delaystate.q_wv_*qbuff_qwv;
+	delaystate.q_wv_.normalize();
 
 	Eigen::Quaternion<double> qbuff_qci = quaternionFromSmallAngle(correction_.block<3,1>(19,0));
-	StateBuffer_[idx_delaystate].q_ci_ = StateBuffer_[idx_delaystate].q_ci_*qbuff_qci;
-	StateBuffer_[idx_delaystate].q_ci_.normalize();
+	delaystate.q_ci_ = delaystate.q_ci_*qbuff_qci;
+	delaystate.q_ci_.normalize();
 
-	StateBuffer_[idx_delaystate].p_ic_ = StateBuffer_[idx_delaystate].p_ic_ + correction_.block(22,0,3,1);
+	delaystate.p_ic_ = delaystate.p_ic_ + correction_.block<3, 1> (22, 0);
 
 	// update qbuff_ and check for fuzzy tracking
 	if (qvw_inittimer_>nBuff_)
 	{
-		Eigen::Quaternion<double> errq = StateBuffer_[idx_delaystate].q_wv_.conjugate()*Eigen::Quaternion<double>(getMedian(qbuff_.block(0,3,nBuff_,1)), getMedian(qbuff_.block(0,0,nBuff_,1)),getMedian(qbuff_.block(0,1,nBuff_,1)),getMedian(qbuff_.block(0,2,nBuff_,1)));	// should be unit quaternion if no error
+		Eigen::Quaternion<double> errq = delaystate.q_wv_.conjugate()*Eigen::Quaternion<double>(getMedian(qbuff_.block<nBuff_, 1>(0,3)), getMedian(qbuff_.block<nBuff_, 1>(0,0)),getMedian(qbuff_.block<nBuff_, 1>(0,1)),getMedian(qbuff_.block<nBuff_, 1>(0,2)));	// should be unit quaternion if no error
 		if  (std::max(errq.vec().maxCoeff(), -errq.vec().minCoeff())/fabs(errq.w())*2>fuzzythres)	// fuzzy tracking (small angle approx)
 		{
 			ROS_WARN_STREAM_THROTTLE(1,"fuzzy tracking triggered: " << std::max(errq.vec().maxCoeff(), -errq.vec().minCoeff())/fabs(errq.w())*2 << " limit: " << fuzzythres <<"\n");
 
 			//state_.q_ = buff_q;
-			StateBuffer_[idx_delaystate].b_w_ = buff_bw;
-			StateBuffer_[idx_delaystate].b_a_ = buff_ba;
-			StateBuffer_[idx_delaystate].L_ = buff_L;
-			StateBuffer_[idx_delaystate].q_wv_ = buff_qwv;
-			StateBuffer_[idx_delaystate].q_ci_ = buff_qci;
-			StateBuffer_[idx_delaystate].p_ic_ = buff_pic;
-			correction_.block(9,0,16,1)=Eigen::Matrix<double,16,1>::Zero();
-			qbuff_q = Eigen::Quaternion<double>(1,0,0,0);
-			qbuff_qwv = Eigen::Quaternion<double>(1,0,0,0);
-			qbuff_qci = Eigen::Quaternion<double>(1,0,0,0);
+			delaystate.b_w_ = buff_bw;
+			delaystate.b_a_ = buff_ba;
+			delaystate.L_ = buff_L;
+			delaystate.q_wv_ = buff_qwv;
+			delaystate.q_ci_ = buff_qci;
+			delaystate.p_ic_ = buff_pic;
+			correction_.block<16, 1> (9, 0) = Eigen::Matrix<double, 16, 1>::Zero();
+			qbuff_q.setIdentity();
+			qbuff_qwv.setIdentity();
+			qbuff_qci.setIdentity();
 		}
 		else // if tracking ok: update mean and 3sigma of past N q_vw's
 		{
-			qbuff_.block(qvw_inittimer_-nBuff_-1,0,1,4) = Eigen::Matrix<double,1,4>(StateBuffer_[idx_delaystate].q_wv_.coeffs());
+			qbuff_.block<1, 4> (qvw_inittimer_ - nBuff_ - 1, 0) = Eigen::Matrix<double, 1, 4>(delaystate.q_wv_.coeffs());
 			qvw_inittimer_ = (qvw_inittimer_)%nBuff_+nBuff_+1;
 		}
 	}
 	else // at beginning get mean and 3sigma of past N q_vw's
 	{
-		qbuff_.block(qvw_inittimer_-1,0,1,4) = Eigen::Matrix<double,1,4>(StateBuffer_[idx_delaystate].q_wv_.coeffs());
+		qbuff_.block<1, 4> (qvw_inittimer_ - 1, 0) = Eigen::Matrix<double, 1, 4>(delaystate.q_wv_.coeffs());
 		qvw_inittimer_++;
 	}
 
@@ -632,7 +634,7 @@ bool SSF_Core::applyCorrection(unsigned char idx_delaystate, const ErrorState & 
 
 	// publish state
 	msgState_.header = msgCorrect_.header;
-	StateBuffer_[(unsigned char)(idx_state_-1)].toStateMsg(msgState_);
+	StateBuffer_[idx].toStateMsg(msgState_);
 	pubState_.publish(msgState_);
 	seq_m++;
 
