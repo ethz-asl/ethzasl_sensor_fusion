@@ -318,6 +318,10 @@ void SSF_Core::stateCallback(const sensor_fusion_comm::ExtEkfConstPtr & msg)
 
 void SSF_Core::propagateState(const double dt)
 {
+  typedef const Eigen::Matrix<double, 4, 4> ConstMatrix4;
+  typedef const Eigen::Matrix<double, 3, 1> ConstVector3;
+  typedef Eigen::Matrix<double, 4, 4> Matrix4;
+
   // get references to current and previous state
   State & cur_state = StateBuffer_[idx_state_];
   State & prev_state = StateBuffer_[(unsigned char)(idx_state_ - 1)];
@@ -330,22 +334,22 @@ void SSF_Core::propagateState(const double dt)
   cur_state.q_ci_ = prev_state.q_ci_;
   cur_state.p_ic_ = prev_state.p_ic_;
 
-  Eigen::Quaternion<double> dq;
+//  Eigen::Quaternion<double> dq;
   Eigen::Matrix<double, 3, 1> dv;
-  Eigen::Matrix<double, 3, 1> ew = cur_state.w_m_ - cur_state.b_w_;
-  Eigen::Matrix<double, 3, 1> ewold = prev_state.w_m_ - prev_state.b_w_;
-  Eigen::Matrix<double, 3, 1> ea = cur_state.a_m_ - cur_state.b_a_;
-  Eigen::Matrix<double, 3, 1> eaold = prev_state.a_m_ - prev_state.b_a_;
-  Eigen::Matrix<double, 4, 4> Omega = omegaMatJPL(ew);
-  Eigen::Matrix<double, 4, 4> OmegaOld = omegaMatJPL(ewold);
-  Eigen::Matrix<double, 4, 4> OmegaMean = omegaMatJPL((ew + ewold) / 2);
+  ConstVector3 ew = cur_state.w_m_ - cur_state.b_w_;
+  ConstVector3 ewold = prev_state.w_m_ - prev_state.b_w_;
+  ConstVector3 ea = cur_state.a_m_ - cur_state.b_a_;
+  ConstVector3 eaold = prev_state.a_m_ - prev_state.b_a_;
+  ConstMatrix4 Omega = omegaMatJPL(ew);
+  ConstMatrix4 OmegaOld = omegaMatJPL(ewold);
+  Matrix4 OmegaMean = omegaMatJPL((ew + ewold) / 2);
 
   // zero order quaternion integration
   //	cur_state.q_ = (Eigen::Matrix<double,4,4>::Identity() + 0.5*Omega*dt)*StateBuffer_[(unsigned char)(idx_state_-1)].q_.coeffs();
 
   // first order quaternion integration, this is kind of costly and may not add a lot to the quality of propagation...
   int div = 1;
-  Eigen::Matrix<double, 4, 4> MatExp;
+  Matrix4 MatExp;
   MatExp.setIdentity();
   OmegaMean *= 0.5 * dt;
   for (int i = 1; i < 5; i++)
@@ -356,7 +360,7 @@ void SSF_Core::propagateState(const double dt)
   }
 
   // first oder quat integration matrix
-  const Eigen::Matrix<double, 4, 4> quat_int = MatExp + 1.0 / 48.0 * (Omega * OmegaOld - OmegaOld * Omega) * dt * dt;
+  ConstMatrix4 quat_int = MatExp + 1.0 / 48.0 * (Omega * OmegaOld - OmegaOld * Omega) * dt * dt;
 
   // first oder quaternion integration
   cur_state.q_.coeffs() = quat_int * prev_state.q_.coeffs();
