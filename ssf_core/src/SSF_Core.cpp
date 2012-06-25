@@ -385,30 +385,35 @@ void SSF_Core::predictProcessCovariance(const double dt){
 
 	ConstMatrix3 C_eq = StateBuffer_[idx_P_].q_.toRotationMatrix();
 
-	ConstMatrix3 Ca3 = C_eq*a_sk;
-	ConstMatrix3 A = Ca3*(-dt*dt/2*eye3 + dt*dt*dt/6*w_sk - dt*dt*dt*dt/24*w_sk*w_sk);
-	ConstMatrix3 B = Ca3*(dt*dt*dt/6*eye3 - dt*dt*dt*dt/24*w_sk + dt*dt*dt*dt*dt/120*w_sk*w_sk);
-	ConstMatrix3 D = -A;
-	ConstMatrix3 E = eye3 - dt*w_sk + dt*dt/2*w_sk*w_sk;
-	ConstMatrix3 F = -dt*eye3 + dt*dt/2*w_sk - dt*dt*dt/6*(w_sk*w_sk);
-	ConstMatrix3 C = Ca3*F;
+	const double dt_p2_2 = dt * dt * 0.5;  // dt^2 / 2
+        const double dt_p3_6 = dt_p2_2 * dt / 3.0; // dt^3 / 6
+        const double dt_p4_24 = dt_p3_6 * dt * 0.25; // dt^4 / 24
+        const double dt_p5_120 = dt_p4_24 * dt * 0.2; // dt^5 / 120
+
+        ConstMatrix3 Ca3 = C_eq * a_sk;
+        ConstMatrix3 A = Ca3 * (-dt_p2_2 * eye3 + dt_p3_6 * w_sk - dt_p4_24 * w_sk * w_sk);
+        ConstMatrix3 B = Ca3 * (dt_p3_6 * eye3 - dt_p4_24 * w_sk + dt_p5_120 * w_sk * w_sk);
+        ConstMatrix3 D = -A;
+        ConstMatrix3 E = eye3 - dt * w_sk + dt_p2_2 * w_sk * w_sk;
+        ConstMatrix3 F = -dt * eye3 + dt_p2_2 * w_sk - dt_p3_6 * (w_sk * w_sk);
+        ConstMatrix3 C = Ca3 * F;
 
 	// discrete error state propagation Matrix Fd according to:
 	// Stephan Weiss and Roland Siegwart.
 	// Real-Time Metric State Estimation for Modular Vision-Inertial Systems.
 	// IEEE International Conference on Robotics and Automation. Shanghai, China, 2011
-	Fd_.setIdentity();
-	Fd_.block<3,3>(0,3) = dt*eye3;
-	Fd_.block<3,3>(0,6) = A;
-	Fd_.block<3,3>(0,9) = B;
-	Fd_.block<3,3>(0,12) = -C_eq*dt*dt/2;
+        Fd_.setIdentity();
+        Fd_.block<3, 3> (0, 3) = dt * eye3;
+        Fd_.block<3, 3> (0, 6) = A;
+        Fd_.block<3, 3> (0, 9) = B;
+        Fd_.block<3, 3> (0, 12) = -C_eq * dt_p2_2;
 
-	Fd_.block<3,3>(3,6) = C;
-	Fd_.block<3,3>(3,9) = D;
-	Fd_.block<3,3>(3,12) = -C_eq*dt;
+        Fd_.block<3, 3> (3, 6) = C;
+        Fd_.block<3, 3> (3, 9) = D;
+        Fd_.block<3, 3> (3, 12) = -C_eq * dt;
 
-	Fd_.block<3,3>(6,6) = E;
-	Fd_.block<3,3>(6,9) = F;
+        Fd_.block<3, 3> (6, 6) = E;
+        Fd_.block<3, 3> (6, 9) = F;
 
 	calc_Q(dt, StateBuffer_[idx_P_].q_, ew, ea, nav, nbav, nwv, nbwv, config_.noise_scale, nqwvv, nqciv, npicv, Qd_);
 	StateBuffer_[idx_P_].P_ = Fd_ *  StateBuffer_[(unsigned char)(idx_P_-1)].P_ * Fd_.transpose() + Qd_;
