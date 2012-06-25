@@ -343,7 +343,7 @@ void SSF_Core::propagateState(const double dt)
   int div;
   div = 1;
   Eigen::Matrix<double, 4, 4> MatExp;
-  MatExp = Eigen::Matrix<double, 4, 4>::Identity();
+  MatExp.setIdentity();
   OmegaMean *= 0.5 * dt;
   for (int i = 1; i < 5; i++)
   {
@@ -352,12 +352,15 @@ void SSF_Core::propagateState(const double dt)
     OmegaMean *= OmegaMean;
   }
 
-  // first oder quat integr.
-  StateBuffer_[idx_state_].q_.coeffs() = (MatExp + 1 / 48 * (Omega * OmegaOld - OmegaOld * Omega) * dt * dt) * StateBuffer_[(unsigned char)(idx_state_ - 1)].q_.coeffs();
+  // first oder quat integration matrix
+  const Eigen::Matrix<double, 4, 4> quat_int = MatExp + 1.0 / 48.0 * (Omega * OmegaOld - OmegaOld * Omega) * dt * dt;
+
+  // first oder quaternion integration
+  StateBuffer_[idx_state_].q_.coeffs() = quat_int * StateBuffer_[(unsigned char)(idx_state_ - 1)].q_.coeffs();
   StateBuffer_[idx_state_].q_.normalize();
 
-  // first oder quat integr.
-  StateBuffer_[idx_state_].q_int_.coeffs() = (MatExp + 1 / 48 * (Omega * OmegaOld - OmegaOld * Omega) * dt * dt) * StateBuffer_[(unsigned char)(idx_state_ - 1)].q_int_.coeffs();
+  // first oder quaternion integration
+  StateBuffer_[idx_state_].q_int_.coeffs() = quat_int * StateBuffer_[(unsigned char)(idx_state_ - 1)].q_int_.coeffs();
   StateBuffer_[idx_state_].q_int_.normalize();
 
   dv = (StateBuffer_[idx_state_].q_.toRotationMatrix() * ea + StateBuffer_[(unsigned char)(idx_state_ - 1)].q_.toRotationMatrix() * eaold) / 2;
