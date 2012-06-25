@@ -13,13 +13,7 @@
 
 #include <ros/ros.h>
 #include <dynamic_reconfigure/server.h>
-
-//#include <ssf_core/DoubleArrayStamped.h>
-
 #include <ssf_core/SSF_CoreConfig.h>
-
-//#include <ssf_core/ext_imu.h>
-//#include <ssf_core/ext_state.h>
 
 // message includes
 #include <sensor_fusion_comm/DoubleArrayStamped.h>
@@ -29,118 +23,149 @@
 #include <sensor_msgs/Imu.h>
 
 #include <vector>
-
 #include <ssf_core/state.h>
 
-#define N_STATE_BUFFER 256	/// size of unsigned char, do not change!
-#define HLI_EKF_STATE_SIZE 16 	/// number of states exchanged with external propagation. Here: p,v,q,bw,bw=16
+#define N_STATE_BUFFER 256	///< size of unsigned char, do not change!
+#define HLI_EKF_STATE_SIZE 16 	///< number of states exchanged with external propagation. Here: p,v,q,bw,bw=16
 
 namespace ssf_core{
 
 typedef dynamic_reconfigure::Server<ssf_core::SSF_CoreConfig> ReconfigureServer;
 
-class SSF_Core {
+class SSF_Core
+{
 
 public:
-        typedef Eigen::Matrix<double, N_STATE, 1> ErrorState;
-        typedef Eigen::Matrix<double, N_STATE, N_STATE> ErrorStateCov;
-	///dynamic reconfigure
-	template<class T>
-	void registerCallback(void(T::*cb_func)(ssf_core::SSF_CoreConfig& config, uint32_t level), T* p_obj){
-		callbacks_.push_back(boost::bind(cb_func, p_obj, _1, _2));};
+  typedef Eigen::Matrix<double, N_STATE, 1> ErrorState;
+  typedef Eigen::Matrix<double, N_STATE, N_STATE> ErrorStateCov;
 
-	/// big init routine
-	void initialize(const Eigen::Matrix<double, 3, 1> & p, const Eigen::Matrix<double, 3, 1> & v, const Eigen::Quaternion<double> & q,
-			const Eigen::Matrix<double, 3, 1> & b_w, const Eigen::Matrix<double, 3, 1> & b_a, const double & L, const Eigen::Quaternion<double> & q_wv,
-			const Eigen::Matrix<double, N_STATE, N_STATE> & P,
-			const Eigen::Matrix<double, 3, 1> & w_m, const Eigen::Matrix<double, 3, 1> & a_m,
-			const Eigen::Matrix<double, 3, 1> & g, const Eigen::Quaternion<double> & q_ci, const Eigen::Matrix<double, 3, 1> & p_ic);
+  /// big init routine
+  void initialize(const Eigen::Matrix<double, 3, 1> & p, const Eigen::Matrix<double, 3, 1> & v,
+                  const Eigen::Quaternion<double> & q, const Eigen::Matrix<double, 3, 1> & b_w,
+                  const Eigen::Matrix<double, 3, 1> & b_a, const double & L, const Eigen::Quaternion<double> & q_wv,
+                  const Eigen::Matrix<double, N_STATE, N_STATE> & P, const Eigen::Matrix<double, 3, 1> & w_m,
+                  const Eigen::Matrix<double, 3, 1> & a_m, const Eigen::Matrix<double, 3, 1> & g,
+                  const Eigen::Quaternion<double> & q_ci, const Eigen::Matrix<double, 3, 1> & p_ic);
 
+  /// retreive all state information at time t. Used to build H, residual and noise matrix by update sensors
+  unsigned char getClosestState(State* timestate, ros::Time tstamp, double delay = 0.00);
 
-	// dynamic reconfigure callbacks
-	int stateSize(){return N_STATE;};
+  /// get all state information at a given index in the ringbuffer
+  bool getStateAtIdx(State* timestate, unsigned char idx);
 
-	SSF_Core();
-	~SSF_Core();
+  SSF_Core();
+  ~SSF_Core();
 
 private:
-	const static int nFullState_ = 28;	/// complete state
-	const static int nBuff_ = 30;		/// buffer size for median q_vw
-	const static int nMaxCorr_ = 50;	/// number of IMU measurements buffered for time correction actions
-	const static int QualityThres_ = 1e3;
+  const static int nFullState_ = 28; ///< complete state
+  const static int nBuff_ = 30; ///< buffer size for median q_vw
+  const static int nMaxCorr_ = 50; ///< number of IMU measurements buffered for time correction actions
+  const static int QualityThres_ = 1e3;
 
-	Eigen::Matrix<double, N_STATE, N_STATE> Fd_;	/// discrete state propagation matrix
-	Eigen::Matrix<double, N_STATE, N_STATE> Qd_;	/// discrete propagation noise matrix
+  Eigen::Matrix<double, N_STATE, N_STATE> Fd_; ///< discrete state propagation matrix
+  Eigen::Matrix<double, N_STATE, N_STATE> Qd_; ///< discrete propagation noise matrix
 
-	/// state variables
-	State StateBuffer_[N_STATE_BUFFER];	/// EKF ringbuffer containing pretty much all info needed at time t
-	unsigned char idx_state_;	/// pointer to state buffer at most recent state
-	unsigned char idx_P_;		/// pointer to state buffer at P latest propagated
-	unsigned char idx_time_;	/// pointer to state buffer at a specific time
+  /// state variables
+  State StateBuffer_[N_STATE_BUFFER]; ///< EKF ringbuffer containing pretty much all info needed at time t
+  unsigned char idx_state_; ///< pointer to state buffer at most recent state
+  unsigned char idx_P_; ///< pointer to state buffer at P latest propagated
+  unsigned char idx_time_; ///< pointer to state buffer at a specific time
 
-	Eigen::Matrix<double, 3, 1> g_;	/// gravity vector
+  Eigen::Matrix<double, 3, 1> g_; ///< gravity vector
 
-	/// vision-world drift watch dog to determine fuzzy tracking
-	int qvw_inittimer_;
-	Eigen::Matrix<double,nBuff_,4> qbuff_;
+  /// vision-world drift watch dog to determine fuzzy tracking
+  int qvw_inittimer_;
+  Eigen::Matrix<double, nBuff_, 4> qbuff_;
 
-	Eigen::Matrix<double,N_STATE,1> correction_;	/// correction from EKF update
+  /// correction from EKF update
+  Eigen::Matrix<double, N_STATE, 1> correction_;
 
-        /// dynamic reconfigure config
-	ssf_core::SSF_CoreConfig config_;
+  /// dynamic reconfigure config
+  ssf_core::SSF_CoreConfig config_;
 
-	Eigen::Matrix<double, 3, 3> R_IW_; 		/// Rot IMU->World
-	Eigen::Matrix<double, 3, 3> R_CI_;  	/// Rot Camera->IMU
-	Eigen::Matrix<double, 3, 3> R_WV_;  	/// Rot World->Vision
+  Eigen::Matrix<double, 3, 3> R_IW_; ///< Rot IMU->World
+  Eigen::Matrix<double, 3, 3> R_CI_; ///< Rot Camera->IMU
+  Eigen::Matrix<double, 3, 3> R_WV_; ///< Rot World->Vision
 
+  bool initialized_;
+  bool predictionMade_;
 
-        bool initialized_;
-        bool predictionMade_;
+  /// enables internal state predictions for log replay
+  /**
+   * used to determine if internal states get overwritten by the external
+   * state prediction (online) or internal state prediction is performed
+   * for log replay, when the external prediction is not available.
+   */
+  bool data_playback_;
 
-	// static parameters
-	bool data_playback_ ;//< used to determine if internal states get overwritten by the external state prediction (online) or internal state prediction is performed (offline / logs)
+  enum
+  {
+    NO_UP, GOOD_UP, FUZZY_UP
+  };
 
-	enum{NO_UP,GOOD_UP, FUZZY_UP};
+  ros::Publisher pubState_; ///< publishes all states of the filter
+  sensor_fusion_comm::DoubleArrayStamped msgState_;
 
-	ros::Publisher pubState_;	/// This contains all states of the filter
-	sensor_fusion_comm::DoubleArrayStamped msgState_;
+  ros::Publisher pubPose_; ///< publishes 6DoF pose output
+  geometry_msgs::PoseWithCovarianceStamped msgPose_;
 
-	ros::Publisher pubPose_;	/// 6DoF pose output
-	geometry_msgs::PoseWithCovarianceStamped msgPose_;
+  ros::Publisher pubPoseCrtl_; ///< publishes 6DoF pose including velocity output
+  sensor_fusion_comm::ExtState msgPoseCtrl_;
 
-	ros::Publisher pubPoseCrtl_;	 /// 6DoF pose including velocity output
-	sensor_fusion_comm::ExtState msgPoseCtrl_;
+  ros::Publisher pubCorrect_; ///< publishes corrections for external state propagation
+  sensor_fusion_comm::ExtEkf msgCorrect_;
 
-	ros::Publisher pubCorrect_;	/// Topic containng corrections for external state propagation
-	sensor_fusion_comm::ExtEkf msgCorrect_;
+  ros::Subscriber subState_; ///< subscriber to external state propagation
+  ros::Subscriber subImu_; ///< subscriber to IMU readings
 
-	ros::Subscriber subState_;	/// input from external state propagation
-	ros::Subscriber subImu_;	/// IMU readings
+  sensor_fusion_comm::ExtEkf hl_state_buf_; ///< buffer to store external propagation data
 
-	sensor_fusion_comm::ExtEkf hl_state_buf_;	/// buffer to store external propagation data
+  // dynamic reconfigure
+  ReconfigureServer *reconfServer_;
+  typedef boost::function<void(ssf_core::SSF_CoreConfig& config, uint32_t level)> CallbackType;
+  std::vector<CallbackType> callbacks_;
 
-	/// dynamic reconfigure
-	ReconfigureServer *reconfServer_;
-	typedef boost::function<void(ssf_core::SSF_CoreConfig& config, uint32_t level)> CallbackType;
-	std::vector<CallbackType> callbacks_;
+  /// propagates the state with given dt
+  void propagateState(const double dt);
 
-	void propagateState(const double dt);	/// state propagation
-	void predictProcessCovariance(const double dt);	/// covariance propagation
-        bool applyCorrection(unsigned char idx_delaystate, const ErrorState & res_delayed, double fuzzythres=0.1);    /// applies the correction
+  /// propagets the error state covariance
+  void predictProcessCovariance(const double dt);
 
-	void propPToIdx(unsigned char idx);	/// propagate covariance to a given index in the ringbuffer
-	void imuCallback(const sensor_msgs::ImuConstPtr & msg);	/// internal state propagation, only read IMU data
-	void stateCallback(const sensor_fusion_comm::ExtEkfConstPtr & msg);	/// external state propagation
-	void Config(ssf_core::SSF_CoreConfig &config, uint32_t level);	/// dynamic reconfigure callbacks
-	void DynConfig(ssf_core::SSF_CoreConfig &config, uint32_t level);	/// dynamic reconfigure callbacks
+  /// applies the correction
+  bool applyCorrection(unsigned char idx_delaystate, const ErrorState & res_delayed, double fuzzythres = 0.1);
 
+  /// propagate covariance to a given index in the ringbuffer
+  void propPToIdx(unsigned char idx);
 
+  /// internal state propagation
+  /**
+   * This function gets called on incoming imu messages an then performs
+   * the state prediction internally. Only use this OR stateCallback by
+   * remapping the topics accordingly.
+   * \sa{stateCallback}
+   */
+  void imuCallback(const sensor_msgs::ImuConstPtr & msg);
 
-	double getMedian(const Eigen::Matrix<double,nBuff_,1> & data);
+  /// external state propagation
+  /**
+   * This function gets called when state prediction is performed externally,
+   * e.g. by asctec_mav_framework. Msg has to be the latest predicted state.
+   * Only use this OR imuCallback by remapping the topics accordingly.
+   * \sa{imuCallback}
+   */
+  void stateCallback(const sensor_fusion_comm::ExtEkfConstPtr & msg);
 
+  /// gets called by dynamic reconfigure and calls all registered callbacks in callbacks_
+  void Config(ssf_core::SSF_CoreConfig &config, uint32_t level);
+
+  /// handles the dynamic reconfigure for ssf_core
+  void DynConfig(ssf_core::SSF_CoreConfig &config, uint32_t level);
+
+  /// computes the median of a given vector
+  double getMedian(const Eigen::Matrix<double, nBuff_, 1> & data);
 
 public:
-  // Interface for update sensors
+  // some header implementations
 
   /// main update routine called by a given sensor
   template<class H_type, class Res_type, class R_type>
@@ -175,12 +200,12 @@ public:
       return applyCorrection(idx_delaystate, correction_, fuzzythres);
     }
 
-  /// retreive all state information at time t. Used to build H, residual and noise matrix by update sensors
-  unsigned char getClosestState(State* timestate, ros::Time tstamp, double delay = 0.00);
-
-  /// get all state information at a given index in the ringbuffer
-  bool getStateAtIdx(State* timestate, unsigned char idx);
-
+  /// registers dynamic reconfigure callbacks
+  template<class T>
+    void registerCallback(void(T::*cb_func)(ssf_core::SSF_CoreConfig& config, uint32_t level), T* p_obj)
+    {
+      callbacks_.push_back(boost::bind(cb_func, p_obj, _1, _2));
+    }
 };
 
 };// end namespace
