@@ -1,7 +1,7 @@
 <stack>
   <description brief="ethzasl_sensor_fusion">
 
-	time delay compensated single and multi sensor fusion framework based on an EKF 
+     Time delay compensated single and multi sensor fusion framework based on an EKF 
 
   </description>
   <author>Maintained by Stephan Weiss, Markus Achtelik</author>
