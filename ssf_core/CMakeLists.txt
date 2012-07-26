@@ -24,6 +24,10 @@ rosbuild_genmsg()
 
 add_definitions (-Wall)
 
+# get eigen
+find_package(Eigen REQUIRED)
+include_directories(${Eigen_INCLUDE_DIRS})
+
 #common commands for building c++ executables and libraries
 rosbuild_add_library(ssf_core src/SSF_Core.cpp src/measurement.cpp src/state.cpp)
 rosbuild_add_compile_flags(ssf_core "-O3")

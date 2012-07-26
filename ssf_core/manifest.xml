@@ -11,11 +11,12 @@
   <depend package="roscpp"/>
   <depend package="sensor_msgs"/>
   <depend package="dynamic_reconfigure"/>
-  <depend package="eigen"/>
   <depend package="sensor_fusion_comm"/>
 
+  <rosdep name="eigen"/>
+
   <export>
-    <cpp cflags="-I${prefix}/include -I${prefix}/cfg/cpp" lflags="-L${prefix}/lib -lssf_core" />
+    <cpp cflags="`pkg-config --cflags eigen3` -I${prefix}/include -I${prefix}/cfg/cpp" lflags="-L${prefix}/lib -lssf_core" />
   </export>
 </package>
 

@@ -20,6 +20,10 @@ rosbuild_genmsg()
 
 add_definitions (-Wall)
 
+# get eigen
+find_package(Eigen REQUIRED)
+include_directories(${Eigen_INCLUDE_DIRS})
+
 rosbuild_add_executable(pose_sensor src/main.cpp src/pose_sensor.cpp)
 set_property(TARGET pose_sensor PROPERTY COMPILE_DEFINITIONS POSE_MEAS)
 rosbuild_add_compile_flags(pose_sensor "-O3")
