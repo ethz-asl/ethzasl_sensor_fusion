@@ -31,54 +31,77 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "position_sensor.h"
 #include <ssf_core/eigen_utils.h>
+
 #define N_MEAS 9 // measurement size
+PositionSensorHandler::PositionSensorHandler(ssf_core::Measurements* meas) :
+  MeasurementHandler(meas)
+{
+  ros::NodeHandle pnh("~");
+  pnh.param("measurement_world_sensor", measurement_world_sensor_, true);
+  pnh.param("use_fixed_covariance", use_fixed_covariance_, false);
 
-void PositionSensorHandler::subscribe(){
+  ROS_INFO_COND(measurement_world_sensor_, "interpreting measurement as sensor w.r.t. world");
+  ROS_INFO_COND(!measurement_world_sensor_, "interpreting measurement as world w.r.t. sensor (e.g. ethzasl_ptam)");
 
+  ROS_INFO_COND(use_fixed_covariance_, "using fixed covariance");
+  ROS_INFO_COND(!use_fixed_covariance_, "using covariance from sensor");
+
+  subscribe();
+}
+
+void PositionSensorHandler::subscribe()
+{
 	ros::NodeHandle nh("ssf_core");
 	subMeasurement_ = nh.subscribe("position_measurement", 1, &PositionSensorHandler::measurementCallback, this);
 
 	measurements->ssf_core_.registerCallback(&PositionSensorHandler::noiseConfig, this);
 
-	nh.param("meas_noise1",n_zp_,0.0001);	// default value is for laser tracker total station
+	nh.param("meas_noise1",n_zp_,0.0001);	// default position noise for laser tracker total station
+
 }
 
-
-void PositionSensorHandler::noiseConfig(ssf_core::SSF_CoreConfig& config, uint32_t level){
+void PositionSensorHandler::noiseConfig(ssf_core::SSF_CoreConfig& config, uint32_t level)
+{
 	//	if(level & ssf_core::SSF_Core_MISC)
 	//	{
 	this->n_zp_ = config.meas_noise1;
+
 	//	}
 }
-
 
 void PositionSensorHandler::measurementCallback(const ssf_updates::PositionWithCovarianceStampedConstPtr & msg)
 {
 	//	ROS_INFO_STREAM("measurement received \n"
 	//					<< "type is: " << typeid(msg).name());
 
-	// init variables
-        ssf_core::State state_old;
-	ros::Time time_old = msg->header.stamp;
-        Eigen::Matrix<double,N_MEAS,N_STATE>H_old;
-        Eigen::Matrix<double, N_MEAS, 1> r_old;
-        Eigen::Matrix<double,N_MEAS,N_MEAS> R;
+	if (msg->header.seq%5!=0)
+		return;
 
-        H_old.setZero();
-        R.setZero();
+	// init variables
+	ssf_core::State state_old;
+	ros::Time time_old = msg->header.stamp;
+	Eigen::Matrix<double,N_MEAS,N_STATE>H_old;
+	Eigen::Matrix<double, N_MEAS, 1> r_old;
+	Eigen::Matrix<double,N_MEAS,N_MEAS> R;
+
+	H_old.setZero();
+	R.setZero();
 
 	// get measurements
 	z_p_ = Eigen::Matrix<double,3,1>(msg->position.x, msg->position.y, msg->position.z);
 
-	// take covariance from sensor
-//	R.block(0,0,3,3) = Eigen::Matrix<double,6,6>(&msg->covariance[0]);
-//	Eigen::Matrix<double,6,1> buffvec = Eigen::Matrix<double,6,1>::Constant(1e-6);
-//	R.block(3,3,6,6) = buffvec.asDiagonal(); // measurement noise for position, q_vw, q_ci
 
-	//  alternatively take fix covariance from reconfigure GUI
-	Eigen::Matrix<double,N_MEAS,1> buffvec;
-	buffvec  << n_zp_,n_zp_,n_zp_,1e-6,1e-6,1e-6,1e-6,1e-6,1e-6; // measurement noise for position, q_vw, q_ci
-	R = buffvec.asDiagonal();
+	if (!use_fixed_covariance_)  // take covariance from sensor
+	{
+		R.block(0,0,3,3) = Eigen::Matrix<double,3,3>(&msg->covariance[0]);
+		Eigen::Matrix<double,6,1> buffvec = Eigen::Matrix<double,6,1>::Constant(1e-6);
+		R.block(3,3,6,6) = buffvec.asDiagonal(); // measurement noise for q_vw, q_ci
+	}
+	else  // alternatively take fix covariance from reconfigure GUI
+	{
+		const double s_zp = n_zp_ * n_zp_;
+		R = (Eigen::Matrix<double, N_MEAS, 1>() << s_zp, s_zp, s_zp, 1e-6, 1e-6, 1e-6, 1e-6, 1e-6, 1e-6).finished().asDiagonal();
+	}
 
 	// feedback for init case
 	measurements->p_vc_ = z_p_;
@@ -120,5 +143,3 @@ void PositionSensorHandler::measurementCallback(const ssf_updates::PositionWithC
 	// call update step in core class
 	measurements->ssf_core_.applyMeasurement(idx,H_old,r_old,R);
 }
-
-

@@ -52,12 +52,7 @@ public:
     pnh.param("init/q_ci/x", q_ci_.x(), 0.0);
     pnh.param("init/q_ci/y", q_ci_.y(), 0.0);
     pnh.param("init/q_ci/z", q_ci_.z(), 0.0);
-
-    if (q_ci_.norm() != 1.0)
-    {
-      ROS_WARN_STREAM("initial q_ci" << q_ci_.coeffs().transpose() <<") is not normalized, normalizing it now");
-      q_ci_.normalize();
-    }
+    q_ci_.normalize();
   }
 
 private:
@@ -71,14 +66,14 @@ private:
     Eigen::Quaternion<double> q, q_wv;
     ssf_core::SSF_Core::ErrorStateCov P;
 
-    // init values
-    g << 0, 0, 9.81; // gravity
-    b_w << 0, 0, 0; // bias gyroscopes
-    b_a << 0, 0, 0; // bias accelerometer
+	// init values
+	g << 0, 0, 9.81;	/// gravity
+	b_w << 0,0,0;		/// bias gyroscopes
+	b_a << 0,0,0;		/// bias accelerometer
 
-    v << 0, 0, 0; // robot velocity (IMU centered)
-    w_m << 0, 0, 0; // initial angular velocity
-    a_m = g; // initial acceleration
+	v << 0,0,0;			/// robot velocity (IMU centered)
+	w_m << 0,0,0;		/// initial angular velocity
+	a_m =g;				/// initial acceleration
 
     q_wv.setIdentity(); // vision-world rotation drift
 

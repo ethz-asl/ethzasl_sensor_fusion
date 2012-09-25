@@ -51,14 +51,13 @@ PoseSensorHandler::PoseSensorHandler(ssf_core::Measurements* meas) :
 
 void PoseSensorHandler::subscribe()
 {
-
   ros::NodeHandle nh("ssf_core");
   subMeasurement_ = nh.subscribe("pose_measurement", 1, &PoseSensorHandler::measurementCallback, this);
 
   measurements->ssf_core_.registerCallback(&PoseSensorHandler::noiseConfig, this);
 
-  nh.param("meas_noise1", n_zp_, 0.01);
-  nh.param("meas_noise2", n_zq_, 0.02);
+  nh.param("meas_noise1", n_zp_, 0.01);	// default position noise is for ethzasl_ptam
+  nh.param("meas_noise2", n_zq_, 0.02);	// default attitude noise is for ethzasl_ptam
 }
 
 void PoseSensorHandler::noiseConfig(ssf_core::SSF_CoreConfig& config, uint32_t level)
@@ -87,8 +86,7 @@ void PoseSensorHandler::measurementCallback(const geometry_msgs::PoseWithCovaria
 
   // get measurements
   z_p_ = Eigen::Matrix<double, 3, 1>(msg->pose.pose.position.x, msg->pose.pose.position.y, msg->pose.pose.position.z);
-  z_q_ = Eigen::Quaternion<double>(msg->pose.pose.orientation.w, msg->pose.pose.orientation.x,
-                                   msg->pose.pose.orientation.y, msg->pose.pose.orientation.z);
+  z_q_ = Eigen::Quaternion<double>(msg->pose.pose.orientation.w, msg->pose.pose.orientation.x, msg->pose.pose.orientation.y, msg->pose.pose.orientation.z);
 
   // take covariance from sensor
   R.block<6, 6> (0, 0) = Eigen::Matrix<double, 6, 6>(&msg->pose.covariance[0]);
@@ -159,12 +157,10 @@ void PoseSensorHandler::measurementCallback(const geometry_msgs::PoseWithCovaria
   // construct residuals
   // position
   r_old.block<3, 1> (0, 0) = z_p_ - C_wv.transpose() * (state_old.p_ + C_q.transpose() * state_old.p_ci_) * state_old.L_;
-
   // attitude
   Eigen::Quaternion<double> q_err;
   q_err = (state_old.q_wv_ * state_old.q_ * state_old.q_ci_).conjugate() * z_q_;
   r_old.block<3, 1> (3, 0) = q_err.vec() / q_err.w() * 2;
-
   // vision world yaw drift
   q_err = state_old.q_wv_;
   r_old(6, 0) = -2 * (q_err.w() * q_err.z() + q_err.x() * q_err.y()) / (1 - 2 * (q_err.y() * q_err.y() + q_err.z() * q_err.z()));
