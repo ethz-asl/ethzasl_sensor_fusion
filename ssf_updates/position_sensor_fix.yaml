@@ -10,7 +10,7 @@ noise_qwv: 0.0
 noise_qci: 0.0
 noise_pic: 0.0
 delay: 0.02
-meas_noise1: 0.0001
+meas_noise1: 0.005
 meas_noise2: 0.0
 
 data_playback: False

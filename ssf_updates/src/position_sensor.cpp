@@ -74,9 +74,6 @@ void PositionSensorHandler::measurementCallback(const ssf_updates::PositionWithC
 	//	ROS_INFO_STREAM("measurement received \n"
 	//					<< "type is: " << typeid(msg).name());
 
-	if (msg->header.seq%5!=0)
-		return;
-
 	// init variables
 	ssf_core::State state_old;
 	ros::Time time_old = msg->header.stamp;
