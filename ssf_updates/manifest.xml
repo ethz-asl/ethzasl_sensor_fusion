@@ -11,6 +11,8 @@
   <depend package="roscpp"/>
   <depend package="ssf_core"/>
   <depend package="geometry_msgs"/>
+  
+  <depend package="asctec_hl_comm"/>
 
 </package>
 

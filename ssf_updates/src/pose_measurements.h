@@ -60,6 +60,12 @@ private:
   Eigen::Matrix<double, 3, 1> p_ci_; ///< initial distance camera-IMU
   Eigen::Quaternion<double> q_ci_; ///< initial rotation camera-IMU
 
+  void init_scale(double scale)
+  {
+	  ROS_WARN_STREAM("using pressure height for scale init");
+	  init(p_vc_[2]/press_height_);
+  }
+
   void init(double scale)
   {
     Eigen::Matrix<double, 3, 1> p, v, b_w, b_a, g, w_m, a_m;

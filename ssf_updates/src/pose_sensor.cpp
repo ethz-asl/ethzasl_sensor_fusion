@@ -53,6 +53,7 @@ void PoseSensorHandler::subscribe()
 {
   ros::NodeHandle nh("ssf_core");
   subMeasurement_ = nh.subscribe("pose_measurement", 1, &PoseSensorHandler::measurementCallback, this);
+  subPressure_ = nh.subscribe("pressure", 1, &PoseSensorHandler::pressureCallback, this);
 
   measurements->ssf_core_.registerCallback(&PoseSensorHandler::noiseConfig, this);
 
@@ -67,6 +68,18 @@ void PoseSensorHandler::noiseConfig(ssf_core::SSF_CoreConfig& config, uint32_t l
   this->n_zp_ = config.meas_noise1;
   this->n_zq_ = config.meas_noise2;
   //	}
+}
+
+void PoseSensorHandler::pressureCallback(const asctec_hl_comm::mav_imuConstPtr & msg)
+{
+	static double heightbuff[10]={0,0,0,0,0,0,0,0,0,0};
+	memcpy(heightbuff, heightbuff+1, sizeof(double)*9);
+	heightbuff[9] = -msg->height;
+	measurements->press_height_=0;
+	for(int k=0; k<10; ++k)
+		measurements->press_height_+=measurements->press_height_;
+	measurements->press_height_ /=10;
+
 }
 
 void PoseSensorHandler::measurementCallback(const geometry_msgs::PoseWithCovarianceStampedConstPtr & msg)

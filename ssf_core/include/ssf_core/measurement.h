@@ -47,7 +47,8 @@ protected:
 	ReconfigureServer *reconfServer_;
 
 	void Config(ssf_core::SSF_CoreConfig &config, uint32_t level);
-	virtual	void init(double scale) = 0;
+	virtual void init(double scale) = 0;
+	virtual	 void init_scale(double scale) = 0;
 
 public:
 
@@ -55,6 +56,7 @@ public:
 	Eigen::Quaternion<double> q_cv_;
 	Eigen::Matrix<double, 3, 1> p_vc_;
 	Eigen::Matrix<double, 3, 1> v_vc_;
+	double press_height_;
 	SSF_Core ssf_core_;
 
 	void addHandler(MeasurementHandler* handler)

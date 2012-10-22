@@ -40,6 +40,8 @@ Measurements::Measurements()
 	p_vc_ = Eigen::Matrix<double, 3, 1>::Constant(0);
 	q_cv_ = Eigen::Quaternion<double>(1, 0, 0, 0);
 
+	press_height_=0;
+
 	ssf_core_.registerCallback(&Measurements::Config,this);
 }
 
@@ -62,7 +64,7 @@ void Measurements::Config(ssf_core::SSF_CoreConfig& config, uint32_t level){
 		if(p_vc_.norm()==0)
 		{
 			ROS_WARN_STREAM("No measurements received yet to initialize position - using scale factor " << config.scale_init << " for init");
-			init(config.scale_init);
+			init_scale(config.scale_init);
 		}
 		else
 		{
