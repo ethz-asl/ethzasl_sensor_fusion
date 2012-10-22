@@ -74,11 +74,12 @@ void PoseSensorHandler::pressureCallback(const asctec_hl_comm::mav_imuConstPtr &
 {
 	static double heightbuff[10]={0,0,0,0,0,0,0,0,0,0};
 	memcpy(heightbuff, heightbuff+1, sizeof(double)*9);
-	heightbuff[9] = -msg->height;
+	heightbuff[9] = msg->height;
 	measurements->press_height_=0;
 	for(int k=0; k<10; ++k)
-		measurements->press_height_+=measurements->press_height_;
+		measurements->press_height_+=heightbuff[k];
 	measurements->press_height_ /=10;
+	//ROS_WARN_STREAM("Got pressure measurement "<<-msg->height<< " => "<<measurements->press_height_);
 
 }
 

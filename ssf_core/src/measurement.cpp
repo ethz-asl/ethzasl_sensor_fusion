@@ -57,7 +57,7 @@ Measurements::~Measurements()
 
 void Measurements::Config(ssf_core::SSF_CoreConfig& config, uint32_t level){
 	if(level & ssf_core::SSF_Core_INIT_FILTER){
-		init(config.scale_init);
+		init_scale(config.scale_init);
 		config.init_filter = false;
 	}
 	else if(level & ssf_core::SSF_Core_SET_HEIGHT){
