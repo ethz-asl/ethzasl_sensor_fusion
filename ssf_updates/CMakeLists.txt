@@ -33,8 +33,3 @@ rosbuild_add_executable(position_sensor src/main.cpp src/position_sensor.cpp)
 set_property(TARGET position_sensor PROPERTY COMPILE_DEFINITIONS POSITION_MEAS)
 rosbuild_add_compile_flags(position_sensor "-O3")
 target_link_libraries(position_sensor ssf_core)
-
-rosbuild_add_executable(bodyvel_sensor src/main.cpp src/bodyvel_sensor.cpp)
-set_property(TARGET bodyvel_sensor PROPERTY COMPILE_DEFINITIONS BODYVEL_MEAS)
-rosbuild_add_compile_flags(bodyvel_sensor "-O3")
-target_link_libraries(bodyvel_sensor ssf_core)

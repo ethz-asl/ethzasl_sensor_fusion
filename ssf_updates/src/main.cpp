@@ -35,9 +35,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifdef POSITION_MEAS
 #include "position_measurements.h"
 #endif
-#ifdef BODYVEL_MEAS
-#include "bodyvel_measurements.h"
-#endif
 
 int main(int argc, char** argv)
 {
@@ -50,11 +47,6 @@ int main(int argc, char** argv)
 #ifdef POSITION_MEAS
 	PositionMeasurements PositionMeas;
 	ROS_INFO_STREAM("Filter type: position_sensor");
-#endif
-
-#ifdef BODYVEL_MEAS
-	BodyVelMeasurements BodyVelMeas;
-	ROS_INFO_STREAM("Filter type: bodyvel_sensor");
 #endif
 
 
