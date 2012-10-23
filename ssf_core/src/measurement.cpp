@@ -56,15 +56,17 @@ Measurements::~Measurements()
 
 
 void Measurements::Config(ssf_core::SSF_CoreConfig& config, uint32_t level){
-	if(level & ssf_core::SSF_Core_INIT_FILTER){
-		init_scale(config.scale_init);
+	if(level & ssf_core::SSF_Core_INIT_FILTER)
+	{
+		init(config.scale_init);
 		config.init_filter = false;
 	}
-	else if(level & ssf_core::SSF_Core_SET_HEIGHT){
+	else if(level & ssf_core::SSF_Core_SET_HEIGHT)
+	{
 		if(p_vc_.norm()==0)
 		{
 			ROS_WARN_STREAM("No measurements received yet to initialize position - using scale factor " << config.scale_init << " for init");
-			init_scale(config.scale_init);
+			init(config.scale_init);
 		}
 		else
 		{
@@ -72,6 +74,11 @@ void Measurements::Config(ssf_core::SSF_CoreConfig& config, uint32_t level){
 			ROS_WARN_STREAM("init filter (set scale to: " << p_vc_[2]/config.height << ")");
 		}
 		config.set_height = false;
+	}
+	else if(level & ssf_core::SSF_Core_SET_PRESS)
+	{
+		init_scale(config.scale_init);
+		config.set_pressure_height = false;
 	}
 }
 

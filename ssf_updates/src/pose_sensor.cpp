@@ -59,15 +59,21 @@ void PoseSensorHandler::subscribe()
 
   nh.param("meas_noise1", n_zp_, 0.01);	// default position noise is for ethzasl_ptam
   nh.param("meas_noise2", n_zq_, 0.02);	// default attitude noise is for ethzasl_ptam
+
+  pressure_offset_=0;
 }
 
 void PoseSensorHandler::noiseConfig(ssf_core::SSF_CoreConfig& config, uint32_t level)
 {
   //	if(level & ssf_core::SSF_Core_MISC)
   //	{
-  this->n_zp_ = config.meas_noise1;
-  this->n_zq_ = config.meas_noise2;
+	  this->n_zp_ = config.meas_noise1;
+	  this->n_zq_ = config.meas_noise2;
   //	}
+  	if(level & ssf_core::SSF_Core_RESET_PRESS)
+  	{
+  		pressure_offset_=measurements->press_height_;
+	}
 }
 
 void PoseSensorHandler::pressureCallback(const asctec_hl_comm::mav_imuConstPtr & msg)

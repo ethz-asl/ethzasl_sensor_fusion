@@ -46,6 +46,8 @@ private:
   ros::Subscriber subMeasurement_;
   ros::Subscriber subPressure_;
 
+  double pressure_offset_;
+
   bool measurement_world_sensor_; ///< defines if the pose of the sensor is measured in world coordinates (true, default) or vice versa (false, e.g. PTAM)
   bool use_fixed_covariance_; ///< use fixed covariance set by dynamic reconfigure
 
