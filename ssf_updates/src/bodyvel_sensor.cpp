@@ -124,7 +124,7 @@ void BodyVelSensorHandler::measurementCallback(const sensor_msgs::ImageConstPtr 
 	// construct residuals
 	r_old.block(0,0,3,1) = z_bv_ - (C_ci*C_q*state_old.v_+C_ci*ew.cross(state_old.p_ci_))*scale;
 	Eigen::Quaternion<double> q_err = state_old.q_;
-	r_old(3, 0) = -2 * (q_err.w() * q_err.z() + q_err.x() * q_err.y()) / (1 - 2 * (q_err.y() * q_err.y() + q_err.z() * q_err.z()));
+	r_old(3, 0) = 0;
 
   // call update step in core class
   measurements->ssf_core_.applyMeasurement(idx, H_old, r_old, R);
