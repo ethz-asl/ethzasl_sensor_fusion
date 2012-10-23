@@ -62,8 +62,8 @@ private:
 
   void init_scale(double scale)
   {
-	  ROS_WARN_STREAM("using pressure height for scale init");
-	  init(p_vc_[2]/press_height_);
+	  ROS_WARN_STREAM("using pressure height for scale init (height/offset): " << press_height_ << "/" << press_offset_);
+	  init(p_vc_[2]/(press_height_-press_offset_));
   }
 
   void init(double scale)

@@ -57,6 +57,7 @@ public:
 	Eigen::Matrix<double, 3, 1> p_vc_;
 	Eigen::Matrix<double, 3, 1> v_vc_;
 	double press_height_;
+	double press_offset_;
 	SSF_Core ssf_core_;
 
 	void addHandler(MeasurementHandler* handler)

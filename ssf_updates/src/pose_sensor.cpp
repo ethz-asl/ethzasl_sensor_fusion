@@ -70,9 +70,12 @@ void PoseSensorHandler::noiseConfig(ssf_core::SSF_CoreConfig& config, uint32_t l
 	  this->n_zp_ = config.meas_noise1;
 	  this->n_zq_ = config.meas_noise2;
   //	}
+
   	if(level & ssf_core::SSF_Core_RESET_PRESS)
   	{
-  		pressure_offset_=measurements->press_height_;
+  		measurements->press_offset_=measurements->press_height_;
+		config.reset_pressure_height = false;
+		ROS_WARN_STREAM( "press_offset: " << measurements->press_offset_);
 	}
 }
 
@@ -84,7 +87,7 @@ void PoseSensorHandler::pressureCallback(const asctec_hl_comm::mav_imuConstPtr &
 	measurements->press_height_=0;
 	for(int k=0; k<10; ++k)
 		measurements->press_height_+=heightbuff[k];
-	measurements->press_height_ /=10;
+	measurements->press_height_ =measurements->press_height_/10;
 	//ROS_WARN_STREAM("Got pressure measurement "<<-msg->height<< " => "<<measurements->press_height_);
 
 }
