@@ -5,7 +5,7 @@ noise_acc: 0.083
 noise_accbias: 0.0083
 noise_gyr: 0.0013
 noise_gyrbias: 0.00013
-noise_scale: 0.0
+noise_scale: 0.05
 noise_qwv: 0.0
 noise_qci: 0.0
 noise_pic: 0.0
@@ -17,8 +17,8 @@ data_playback: True
 
 # initialization of camera w.r.t. IMU
 init/q_ci/w: 0.0
-init/q_ci/x: 0.0    
-init/q_ci/y: 1.0
+init/q_ci/x: 1.0    
+init/q_ci/y: -1.0
 init/q_ci/z: 0.0
 
 init/p_ci/x: 0.0    

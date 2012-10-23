@@ -33,8 +33,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define BODYVEL_SENSOR_H
 
 #include <ssf_core/measurement.h>
-//#include <iof/iof.h>
-#include <cont8/cont8.h>
+#include <iof/iof.h>
+//#include <cont8/cont8.h>
 
 class BodyVelSensorHandler : public ssf_core::MeasurementHandler
 {
@@ -43,8 +43,8 @@ private:
   Eigen::Matrix<double, 3, 1> z_bv_; /// body velocity
   double n_zbv_; /// body velocity noise
 
-//  iof::IOF inertialOF;
-  cont8 inertialOF;
+  iof::IOF inertialOF;
+//  cont8 inertialOF;
 
   ros::Subscriber subMeasurement_;
 
