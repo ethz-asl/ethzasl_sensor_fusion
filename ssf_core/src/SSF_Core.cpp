@@ -49,12 +49,10 @@ SSF_Core::SSF_Core()
   pubCorrect_ = nh.advertise<sensor_fusion_comm::ExtEkf> ("correction", 1);
   pubPose_ = nh.advertise<geometry_msgs::PoseWithCovarianceStamped> ("pose", 1);
   pubPoseCrtl_ = nh.advertise<sensor_fusion_comm::ExtState> ("ext_state", 1);
-  msgState_.data.resize(nFullState_, 0);
 
   subImu_ = nh.subscribe("imu_state_input", 1 /*N_STATE_BUFFER*/, &SSF_Core::imuCallback, this);
   subState_ = nh.subscribe("hl_state_input", 1 /*N_STATE_BUFFER*/, &SSF_Core::stateCallback, this);
 
-  msgCorrect_.state.resize(HLI_EKF_STATE_SIZE, 0);
   hl_state_buf_.state.resize(HLI_EKF_STATE_SIZE, 0);
 
   qvw_inittimer_ = 1;
@@ -147,31 +145,33 @@ void SSF_Core::initialize(const Eigen::Matrix<double, 3, 1> & p, const Eigen::Ma
   qbuff_ = Eigen::Matrix<double, nBuff_, 4>::Constant(0);
 
   // init external propagation
-  msgCorrect_.header.stamp = ros::Time::now();
-  msgCorrect_.header.seq = 0;
-  msgCorrect_.angular_velocity.x = 0;
-  msgCorrect_.angular_velocity.y = 0;
-  msgCorrect_.angular_velocity.z = 0;
-  msgCorrect_.linear_acceleration.x = 0;
-  msgCorrect_.linear_acceleration.y = 0;
-  msgCorrect_.linear_acceleration.z = 0;
-  msgCorrect_.state[0] = state.p_[0];
-  msgCorrect_.state[1] = state.p_[1];
-  msgCorrect_.state[2] = state.p_[2];
-  msgCorrect_.state[3] = state.v_[0];
-  msgCorrect_.state[4] = state.v_[1];
-  msgCorrect_.state[5] = state.v_[2];
-  msgCorrect_.state[6] = state.q_.w();
-  msgCorrect_.state[7] = state.q_.x();
-  msgCorrect_.state[8] = state.q_.y();
-  msgCorrect_.state[9] = state.q_.z();
-  msgCorrect_.state[10] = state.b_w_[0];
-  msgCorrect_.state[11] = state.b_w_[1];
-  msgCorrect_.state[12] = state.b_w_[2];
-  msgCorrect_.state[13] = state.b_a_[0];
-  msgCorrect_.state[14] = state.b_a_[1];
-  msgCorrect_.state[15] = state.b_a_[2];
-  msgCorrect_.flag = sensor_fusion_comm::ExtEkf::initialization;
+  sensor_fusion_comm::ExtEkfPtr msgCorrect_(new sensor_fusion_comm::ExtEkf);
+  msgCorrect_->state.resize(HLI_EKF_STATE_SIZE, 0);
+  msgCorrect_->header.stamp = ros::Time::now();
+  msgCorrect_->header.seq = 0;
+  msgCorrect_->angular_velocity.x = 0;
+  msgCorrect_->angular_velocity.y = 0;
+  msgCorrect_->angular_velocity.z = 0;
+  msgCorrect_->linear_acceleration.x = 0;
+  msgCorrect_->linear_acceleration.y = 0;
+  msgCorrect_->linear_acceleration.z = 0;
+  msgCorrect_->state[0] = state.p_[0];
+  msgCorrect_->state[1] = state.p_[1];
+  msgCorrect_->state[2] = state.p_[2];
+  msgCorrect_->state[3] = state.v_[0];
+  msgCorrect_->state[4] = state.v_[1];
+  msgCorrect_->state[5] = state.v_[2];
+  msgCorrect_->state[6] = state.q_.w();
+  msgCorrect_->state[7] = state.q_.x();
+  msgCorrect_->state[8] = state.q_.y();
+  msgCorrect_->state[9] = state.q_.z();
+  msgCorrect_->state[10] = state.b_w_[0];
+  msgCorrect_->state[11] = state.b_w_[1];
+  msgCorrect_->state[12] = state.b_w_[2];
+  msgCorrect_->state[13] = state.b_a_[0];
+  msgCorrect_->state[14] = state.b_a_[1];
+  msgCorrect_->state[15] = state.b_a_[2];
+  msgCorrect_->flag = sensor_fusion_comm::ExtEkf::initialization;
   pubCorrect_.publish(msgCorrect_);
 
   // increase state pointers
@@ -220,13 +220,15 @@ void SSF_Core::imuCallback(const sensor_msgs::ImuConstPtr & msg)
 
   predictionMade_ = true;
 
-  msgPose_.header.stamp = msg->header.stamp;
-  msgPose_.header.seq = msg->header.seq;
 
+  geometry_msgs::PoseWithCovarianceStampedPtr msgPose_(new geometry_msgs::PoseWithCovarianceStamped);
+  msgPose_->header.stamp = msg->header.stamp;
+  msgPose_->header.seq = msg->header.seq;
   StateBuffer_[(unsigned char)(idx_state_ - 1)].toPoseMsg(msgPose_);
   pubPose_.publish(msgPose_);
 
-  msgPoseCtrl_.header = msgPose_.header;
+  sensor_fusion_comm::ExtStatePtr msgPoseCtrl_(new sensor_fusion_comm::ExtState);
+  msgPoseCtrl_->header = msgPose_->header;
   StateBuffer_[(unsigned char)(idx_state_ - 1)].toExtStateMsg(msgPoseCtrl_);
   pubPoseCrtl_.publish(msgPoseCtrl_);
 
@@ -304,13 +306,14 @@ void SSF_Core::stateCallback(const sensor_fusion_comm::ExtEkfConstPtr & msg)
 
   predictionMade_ = true;
 
-  msgPose_.header.stamp = msg->header.stamp;
-  msgPose_.header.seq = msg->header.seq;
-
+  geometry_msgs::PoseWithCovarianceStampedPtr msgPose_(new geometry_msgs::PoseWithCovarianceStamped);
+  msgPose_->header.stamp = msg->header.stamp;
+  msgPose_->header.seq = msg->header.seq;
   StateBuffer_[(unsigned char)(idx_state_ - 1)].toPoseMsg(msgPose_);
   pubPose_.publish(msgPose_);
 
-  msgPoseCtrl_.header = msgPose_.header;
+  sensor_fusion_comm::ExtStatePtr msgPoseCtrl_(new sensor_fusion_comm::ExtState);
+  msgPoseCtrl_->header = msgPose_->header;
   StateBuffer_[(unsigned char)(idx_state_ - 1)].toExtStateMsg(msgPoseCtrl_);
   pubPoseCrtl_.publish(msgPoseCtrl_);
 
@@ -618,42 +621,46 @@ bool SSF_Core::applyCorrection(unsigned char idx_delaystate, const ErrorState & 
   checkForNumeric(&correction_[0], HLI_EKF_STATE_SIZE, "update");
 
   // publish correction for external propagation
-  msgCorrect_.header.stamp = ros::Time::now();
-  msgCorrect_.header.seq = seq_m;
-  msgCorrect_.angular_velocity.x = 0;
-  msgCorrect_.angular_velocity.y = 0;
-  msgCorrect_.angular_velocity.z = 0;
-  msgCorrect_.linear_acceleration.x = 0;
-  msgCorrect_.linear_acceleration.y = 0;
-  msgCorrect_.linear_acceleration.z = 0;
+  sensor_fusion_comm::ExtEkfPtr msgCorrect_(new sensor_fusion_comm::ExtEkf);
+  msgCorrect_->state.resize(HLI_EKF_STATE_SIZE, 0);
+  msgCorrect_->header.stamp = ros::Time::now();
+  msgCorrect_->header.seq = seq_m;
+  msgCorrect_->angular_velocity.x = 0;
+  msgCorrect_->angular_velocity.y = 0;
+  msgCorrect_->angular_velocity.z = 0;
+  msgCorrect_->linear_acceleration.x = 0;
+  msgCorrect_->linear_acceleration.y = 0;
+  msgCorrect_->linear_acceleration.z = 0;
 
   const unsigned char idx = (unsigned char)(idx_state_ - 1);
-  msgCorrect_.state[0] = StateBuffer_[idx].p_[0] - hl_state_buf_.state[0];
-  msgCorrect_.state[1] = StateBuffer_[idx].p_[1] - hl_state_buf_.state[1];
-  msgCorrect_.state[2] = StateBuffer_[idx].p_[2] - hl_state_buf_.state[2];
-  msgCorrect_.state[3] = StateBuffer_[idx].v_[0] - hl_state_buf_.state[3];
-  msgCorrect_.state[4] = StateBuffer_[idx].v_[1] - hl_state_buf_.state[4];
-  msgCorrect_.state[5] = StateBuffer_[idx].v_[2] - hl_state_buf_.state[5];
+  msgCorrect_->state[0] = StateBuffer_[idx].p_[0] - hl_state_buf_.state[0];
+  msgCorrect_->state[1] = StateBuffer_[idx].p_[1] - hl_state_buf_.state[1];
+  msgCorrect_->state[2] = StateBuffer_[idx].p_[2] - hl_state_buf_.state[2];
+  msgCorrect_->state[3] = StateBuffer_[idx].v_[0] - hl_state_buf_.state[3];
+  msgCorrect_->state[4] = StateBuffer_[idx].v_[1] - hl_state_buf_.state[4];
+  msgCorrect_->state[5] = StateBuffer_[idx].v_[2] - hl_state_buf_.state[5];
 
   Eigen::Quaterniond hl_q(hl_state_buf_.state[6], hl_state_buf_.state[7], hl_state_buf_.state[8], hl_state_buf_.state[9]);
   qbuff_q = hl_q.inverse() * StateBuffer_[idx].q_;
-  msgCorrect_.state[6] = qbuff_q.w();
-  msgCorrect_.state[7] = qbuff_q.x();
-  msgCorrect_.state[8] = qbuff_q.y();
-  msgCorrect_.state[9] = qbuff_q.z();
+  msgCorrect_->state[6] = qbuff_q.w();
+  msgCorrect_->state[7] = qbuff_q.x();
+  msgCorrect_->state[8] = qbuff_q.y();
+  msgCorrect_->state[9] = qbuff_q.z();
 
-  msgCorrect_.state[10] = StateBuffer_[idx].b_w_[0] - hl_state_buf_.state[10];
-  msgCorrect_.state[11] = StateBuffer_[idx].b_w_[1] - hl_state_buf_.state[11];
-  msgCorrect_.state[12] = StateBuffer_[idx].b_w_[2] - hl_state_buf_.state[12];
-  msgCorrect_.state[13] = StateBuffer_[idx].b_a_[0] - hl_state_buf_.state[13];
-  msgCorrect_.state[14] = StateBuffer_[idx].b_a_[1] - hl_state_buf_.state[14];
-  msgCorrect_.state[15] = StateBuffer_[idx].b_a_[2] - hl_state_buf_.state[15];
+  msgCorrect_->state[10] = StateBuffer_[idx].b_w_[0] - hl_state_buf_.state[10];
+  msgCorrect_->state[11] = StateBuffer_[idx].b_w_[1] - hl_state_buf_.state[11];
+  msgCorrect_->state[12] = StateBuffer_[idx].b_w_[2] - hl_state_buf_.state[12];
+  msgCorrect_->state[13] = StateBuffer_[idx].b_a_[0] - hl_state_buf_.state[13];
+  msgCorrect_->state[14] = StateBuffer_[idx].b_a_[1] - hl_state_buf_.state[14];
+  msgCorrect_->state[15] = StateBuffer_[idx].b_a_[2] - hl_state_buf_.state[15];
 
-  msgCorrect_.flag = sensor_fusion_comm::ExtEkf::state_correction;
+  msgCorrect_->flag = sensor_fusion_comm::ExtEkf::state_correction;
   pubCorrect_.publish(msgCorrect_);
 
   // publish state
-  msgState_.header = msgCorrect_.header;
+  sensor_fusion_comm::DoubleArrayStampedPtr msgState_(new sensor_fusion_comm::DoubleArrayStamped);
+  msgState_->data.resize(nFullState_, 0);
+  msgState_->header = msgCorrect_->header;
   StateBuffer_[idx].toStateMsg(msgState_);
   pubState_.publish(msgState_);
   seq_m++;

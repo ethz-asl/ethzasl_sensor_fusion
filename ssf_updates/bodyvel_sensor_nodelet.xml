@@ -1,0 +1,9 @@
+<library path="lib/libbodyvel_sensor_nodelet">
+  <class name="ssf_updates/bodyvel_sensor"
+         type="SSFUpdatesNodelet"
+         base_class_type="nodelet::Nodelet">
+    <description> 
+      Modular Single Sensor Fusion (SSF) framework nodelet.
+    </description>
+  </class>
+</library>

@@ -128,16 +128,16 @@ private:
   };
 
   ros::Publisher pubState_; ///< publishes all states of the filter
-  sensor_fusion_comm::DoubleArrayStamped msgState_;
+//  sensor_fusion_comm::DoubleArrayStamped msgState_; // remove for nodelet compatibility
 
   ros::Publisher pubPose_; ///< publishes 6DoF pose output
-  geometry_msgs::PoseWithCovarianceStamped msgPose_;
+//  geometry_msgs::PoseWithCovarianceStamped msgPose_; // remove for nodelet compatibility
 
   ros::Publisher pubPoseCrtl_; ///< publishes 6DoF pose including velocity output
-  sensor_fusion_comm::ExtState msgPoseCtrl_;
+//  sensor_fusion_comm::ExtState msgPoseCtrl_; // remove for nodelet compatibility
 
   ros::Publisher pubCorrect_; ///< publishes corrections for external state propagation
-  sensor_fusion_comm::ExtEkf msgCorrect_;
+//  sensor_fusion_comm::ExtEkf msgCorrect_; // remove for nodelet compatibility
 
   ros::Subscriber subState_; ///< subscriber to external state propagation
   ros::Subscriber subImu_; ///< subscriber to IMU readings

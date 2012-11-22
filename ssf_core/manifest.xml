@@ -1,7 +1,7 @@
 <package>
   <description brief="ssf_core">
 
-     Single Sensor Fusion (SSF) framework containing the core filter functions including full state propagation and shell for update sensor modules
+     Modular Single Sensor Fusion (SSF) framework containing the core filter functions including full state propagation and shell for update sensor modules
 
   </description>
   <author>Stephan Weiss, Markus Achtelik</author>

@@ -86,15 +86,15 @@ public:
 
   /// assembles a PoseWithCovarianceStamped message from the state
   /** it does not set the header */
-  void toPoseMsg(geometry_msgs::PoseWithCovarianceStamped & pose);
+  void toPoseMsg(geometry_msgs::PoseWithCovarianceStampedPtr pose);
 
   /// assembles an ExtState message from the state
   /** it does not set the header */
-  void toExtStateMsg(sensor_fusion_comm::ExtState & state);
+  void toExtStateMsg(sensor_fusion_comm::ExtStatePtr state);
 
   /// assembles a DoubleArrayStamped message from the state
   /** it does not set the header */
-  void toStateMsg(sensor_fusion_comm::DoubleArrayStamped & state);
+  void toStateMsg(sensor_fusion_comm::DoubleArrayStampedPtr state);
 
 
 

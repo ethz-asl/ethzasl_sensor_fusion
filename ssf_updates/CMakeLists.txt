@@ -38,3 +38,7 @@ rosbuild_add_executable(bodyvel_sensor src/main.cpp src/bodyvel_sensor.cpp)
 set_property(TARGET bodyvel_sensor PROPERTY COMPILE_DEFINITIONS BODYVEL_MEAS)
 rosbuild_add_compile_flags(bodyvel_sensor "-O3")
 target_link_libraries(bodyvel_sensor ssf_core)
+
+rosbuild_add_library(bodyvel_sensor_nodelet src/main_nodelet.cpp src/bodyvel_sensor.cpp)
+set_property(TARGET bodyvel_sensor_nodelet PROPERTY COMPILE_DEFINITIONS BODYVEL_MEAS)
+target_link_libraries(bodyvel_sensor_nodelet ssf_core)

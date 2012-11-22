@@ -73,50 +73,50 @@ void State::getPoseCovariance(geometry_msgs::PoseWithCovariance::_covariance_typ
     cov[(i / 3 + 3) * 6 + (i % 3 + 3)] = P_((i / 3 + 6) * N_STATE + (i % 3 + 6));
 }
 
-void State::toPoseMsg(geometry_msgs::PoseWithCovarianceStamped & pose)
+void State::toPoseMsg(geometry_msgs::PoseWithCovarianceStampedPtr pose)
 {
-  eigen_conversions::vector3dToPoint(p_, pose.pose.pose.position);
-  eigen_conversions::quaternionToMsg(q_, pose.pose.pose.orientation);
-  getPoseCovariance(pose.pose.covariance);
+  eigen_conversions::vector3dToPoint(p_, pose->pose.pose.position);
+  eigen_conversions::quaternionToMsg(q_, pose->pose.pose.orientation);
+  getPoseCovariance(pose->pose.covariance);
 }
 
-void State::toExtStateMsg(sensor_fusion_comm::ExtState & state)
+void State::toExtStateMsg(sensor_fusion_comm::ExtStatePtr state)
 {
-  eigen_conversions::vector3dToPoint(p_, state.pose.position);
-  eigen_conversions::quaternionToMsg(q_, state.pose.orientation);
-  eigen_conversions::vector3dToPoint(v_, state.velocity);
+  eigen_conversions::vector3dToPoint(p_, state->pose.position);
+  eigen_conversions::quaternionToMsg(q_, state->pose.orientation);
+  eigen_conversions::vector3dToPoint(v_, state->velocity);
 }
 
-void State::toStateMsg(sensor_fusion_comm::DoubleArrayStamped & state)
+void State::toStateMsg(sensor_fusion_comm::DoubleArrayStampedPtr state)
 {
-  state.data[0] = p_[0];
-  state.data[1] = p_[1];
-  state.data[2] = p_[2];
-  state.data[3] = v_[0];
-  state.data[4] = v_[1];
-  state.data[5] = v_[2];
-  state.data[6] = q_.w();
-  state.data[7] = q_.x();
-  state.data[8] = q_.y();
-  state.data[9] = q_.z();
-  state.data[10] = b_w_[0];
-  state.data[11] = b_w_[1];
-  state.data[12] = b_w_[2];
-  state.data[13] = b_a_[0];
-  state.data[14] = b_a_[1];
-  state.data[15] = b_a_[2];
-  state.data[16] = L_;
-  state.data[17] = q_wv_.w();
-  state.data[18] = q_wv_.x();
-  state.data[19] = q_wv_.y();
-  state.data[20] = q_wv_.z();
-  state.data[21] = q_ci_.w();
-  state.data[22] = q_ci_.x();
-  state.data[23] = q_ci_.y();
-  state.data[24] = q_ci_.z();
-  state.data[25] = p_ci_[0];
-  state.data[26] = p_ci_[1];
-  state.data[27] = p_ci_[2];
+  state->data[0] = p_[0];
+  state->data[1] = p_[1];
+  state->data[2] = p_[2];
+  state->data[3] = v_[0];
+  state->data[4] = v_[1];
+  state->data[5] = v_[2];
+  state->data[6] = q_.w();
+  state->data[7] = q_.x();
+  state->data[8] = q_.y();
+  state->data[9] = q_.z();
+  state->data[10] = b_w_[0];
+  state->data[11] = b_w_[1];
+  state->data[12] = b_w_[2];
+  state->data[13] = b_a_[0];
+  state->data[14] = b_a_[1];
+  state->data[15] = b_a_[2];
+  state->data[16] = L_;
+  state->data[17] = q_wv_.w();
+  state->data[18] = q_wv_.x();
+  state->data[19] = q_wv_.y();
+  state->data[20] = q_wv_.z();
+  state->data[21] = q_ci_.w();
+  state->data[22] = q_ci_.x();
+  state->data[23] = q_ci_.y();
+  state->data[24] = q_ci_.z();
+  state->data[25] = p_ci_[0];
+  state->data[26] = p_ci_[1];
+  state->data[27] = p_ci_[2];
 }
 
 }; // end namespace ssf_core

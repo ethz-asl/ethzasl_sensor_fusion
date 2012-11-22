@@ -1,7 +1,7 @@
 <package>
   <description brief="ssf_updates">
 
-     Single Sensor Fusion (SSF) framework containing the update sensor modules
+     Modular Single Sensor Fusion (SSF) framework containing the update sensor modules
 
   </description>
   <author>Stephan Weiss, Markus Achtelik</author>
@@ -13,6 +13,12 @@
   <depend package="geometry_msgs"/>
   <depend package="iof"/>
   <depend package="cont8"/>
+  
+  <depend package="nodelet" />
+  
+    <export> 
+        <nodelet plugin="${prefix}/bodyvel_sensor_nodelet.xml"/>
+  </export>
 
 </package>
 
