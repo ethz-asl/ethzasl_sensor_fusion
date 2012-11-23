@@ -44,15 +44,14 @@ public:
 	{
 		addHandler(new BodyVelSensorHandler(this));
 
-		ros::NodeHandle pnh("~");
-		pnh.param("init/p_ci/x", p_ci_[0], 0.0);
-		pnh.param("init/p_ci/y", p_ci_[1], 0.0);
-		pnh.param("init/p_ci/z", p_ci_[2], 0.0);
+		priv_nh.param("init/p_ci/x", p_ci_[0], 0.0);
+		priv_nh.param("init/p_ci/y", p_ci_[1], 0.0);
+		priv_nh.param("init/p_ci/z", p_ci_[2], 0.0);
 
-		pnh.param("init/q_ci/w", q_ci_.w(), 1.0);
-		pnh.param("init/q_ci/x", q_ci_.x(), 0.0);
-		pnh.param("init/q_ci/y", q_ci_.y(), 0.0);
-		pnh.param("init/q_ci/z", q_ci_.z(), 0.0);
+		priv_nh.param("init/q_ci/w", q_ci_.w(), 1.0);
+		priv_nh.param("init/q_ci/x", q_ci_.x(), 0.0);
+		priv_nh.param("init/q_ci/y", q_ci_.y(), 0.0);
+		priv_nh.param("init/q_ci/z", q_ci_.z(), 0.0);
 		q_ci_.normalize();
 	}
 

@@ -33,30 +33,28 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ssf_core/eigen_utils.h>
 
 #define N_MEAS 4 // measurement size
-BodyVelSensorHandler::BodyVelSensorHandler(ssf_core::Measurements* meas) :
+BodyVelSensorHandler::BodyVelSensorHandler(ssf_core::Measurements* meas,const ros::NodeHandle & priv_nh, const ros::NodeHandle & nh) :
   MeasurementHandler(meas)
 {
-  ros::NodeHandle pnh("~");
-  pnh.param("measurement_world_sensor", measurement_world_sensor_, true);
-  pnh.param("use_fixed_covariance", use_fixed_covariance_, true);
+	priv_nh.param("measurement_world_sensor", measurement_world_sensor_, true);
+	priv_nh.param("use_fixed_covariance", use_fixed_covariance_, true);
 
-  ROS_INFO_COND(measurement_world_sensor_, "interpreting measurement as sensor w.r.t. world");
-  ROS_INFO_COND(!measurement_world_sensor_, "interpreting measurement as world w.r.t. sensor (e.g. ethzasl_ptam)");
+	ROS_INFO_COND(measurement_world_sensor_, "interpreting measurement as sensor w.r.t. world");
+	ROS_INFO_COND(!measurement_world_sensor_, "interpreting measurement as world w.r.t. sensor (e.g. ethzasl_ptam)");
 
-  ROS_INFO_COND(use_fixed_covariance_, "using fixed covariance");
-  ROS_INFO_COND(!use_fixed_covariance_, "using covariance from sensor");
+	ROS_INFO_COND(use_fixed_covariance_, "using fixed covariance");
+	ROS_INFO_COND(!use_fixed_covariance_, "using covariance from sensor");
 
-  subscribe();
+	subscribe();
 }
 
-void BodyVelSensorHandler::subscribe()
+void BodyVelSensorHandler::subscribe(const ros::NodeHandle & priv_nh, const ros::NodeHandle & nh)
 {
-  ros::NodeHandle nh("ssf_core");
   subMeasurement_ = nh.subscribe("bodyvel_measurement", 1, &BodyVelSensorHandler::measurementCallback, this);
 
   measurements->ssf_core_.registerCallback(&BodyVelSensorHandler::noiseConfig, this);
 
-  nh.param("meas_noise1", n_zbv_, 0.01);	// default body vel noise is for iof
+  priv_nh.param("meas_noise1", n_zbv_, 0.01);	// default body vel noise is for iof
 }
 
 void BodyVelSensorHandler::noiseConfig(ssf_core::SSF_CoreConfig& config, uint32_t level)

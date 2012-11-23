@@ -51,6 +51,7 @@ protected:
 
 public:
 
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	// measurements
 	Eigen::Quaternion<double> q_cv_;
 	Eigen::Matrix<double, 3, 1> p_vc_;
