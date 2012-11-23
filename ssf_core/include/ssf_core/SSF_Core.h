@@ -77,7 +77,7 @@ public:
   /// get all state information at a given index in the ringbuffer
   bool getStateAtIdx(State* timestate, unsigned char idx);
 
-  SSF_Core();
+  SSF_Core(ros::NodeHandle priv_nh, ros::NodeHandle nh);
   ~SSF_Core();
 
 private:

@@ -36,14 +36,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace ssf_core
 {
 
-SSF_Core::SSF_Core()
+SSF_Core::SSF_Core(ros::NodeHandle priv_nh, ros::NodeHandle nh)
 {
   initialized_ = false;
   predictionMade_ = false;
-
-  /// ros stuff
-  ros::NodeHandle nh("ssf_core");
-  ros::NodeHandle pnh("~");
 
   pubState_ = nh.advertise<sensor_fusion_comm::DoubleArrayStamped> ("state_out", 1);
   pubCorrect_ = nh.advertise<sensor_fusion_comm::ExtEkf> ("correction", 1);
@@ -57,10 +53,11 @@ SSF_Core::SSF_Core()
 
   qvw_inittimer_ = 1;
 
-  pnh.param("data_playback", data_playback_, false);
-  reconfServer_ = new ReconfigureServer(ros::NodeHandle("~"));
+  priv_nh.param("data_playback", data_playback_, false);
+  reconfServer_ = new ReconfigureServer(ros::NodeHandle(priv_nh));
   ReconfigureServer::CallbackType f = boost::bind(&SSF_Core::Config, this, _1, _2);
   reconfServer_->setCallback(f);
+
   //register dyn config list
   registerCallback(&SSF_Core::DynConfig, this);
 }

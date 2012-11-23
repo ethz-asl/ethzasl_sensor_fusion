@@ -39,7 +39,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class PoseMeasurements : public ssf_core::Measurements
 {
 public:
-  PoseMeasurements()
+  PoseMeasurements(const ros::NodeHandle & priv_nh=ros::NodeHandle("~"), const ros::NodeHandle & nh=ros::NodeHandle("ssf_core"))
+	:Measurements(priv_nh, nh)
   {
     addHandler(new PoseSensorHandler(this));
 

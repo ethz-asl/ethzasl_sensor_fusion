@@ -50,25 +50,50 @@ public:
   {}
 
   ~SSFUpdatesNodelet()
-  {}
-
-private:
-	virtual void onInit()
-	{
+  {
 	#ifdef POSE_MEAS
-		PoseMeasurements PoseMeas;
-		ROS_INFO_STREAM("Filter type: pose_sensor");
+		delete PoseMeas;
 	#endif
 
 	#ifdef POSITION_MEAS
-		PositionMeasurements PositionMeas;
-		ROS_INFO_STREAM("Filter type: position_sensor");
+		delete PositionMeas;
 	#endif
 
 	#ifdef BODYVEL_MEAS
-		BodyVelMeasurements BodyVelMeas;
-		ROS_INFO_STREAM("Filter type: bodyvel_sensor");
+		delete BodyVelMeas;
 	#endif
+  }
+
+private:
+
+	#ifdef POSE_MEAS
+		PoseMeasurements *PoseMeas;
+	#endif
+
+	#ifdef POSITION_MEAS
+		PositionMeasurements *PositionMeas;
+	#endif
+
+	#ifdef BODYVEL_MEAS
+		BodyVelMeasurements *BodyVelMeas;
+	#endif
+
+	virtual void onInit()
+	{
+		#ifdef POSE_MEAS
+			PoseMeas = new PoseMeasurements(getPrivateNodeHandle(),getNodeHandle());
+			ROS_INFO_STREAM("Filter type: pose_sensor");
+		#endif
+
+		#ifdef POSITION_MEAS
+			PositionMeas = new PositionMeasurements(getPrivateNodeHandle(),getNodeHandle());
+			ROS_INFO_STREAM("Filter type: position_sensor");
+		#endif
+
+		#ifdef BODYVEL_MEAS
+			BodyVelMeas = new BodyVelMeasurements(getPrivateNodeHandle(),getNodeHandle());
+			ROS_INFO_STREAM("Filter type: bodyvel_sensor");
+		#endif
 	}
 };
 
