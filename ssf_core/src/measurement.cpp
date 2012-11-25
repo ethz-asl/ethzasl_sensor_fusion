@@ -33,8 +33,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace ssf_core{
 
-Measurements::Measurements(const ros::NodeHandle & priv_nh, const ros::NodeHandle & nh)
-:ssf_core_(priv_nh, nh)
+Measurements::Measurements(const ros::NodeHandle & priv_nh)
+:ssf_core_(priv_nh)
 {
 	// setup: initial pos, att, of measurement sensor
 

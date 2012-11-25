@@ -33,12 +33,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ssf_core/eigen_utils.h>
 
 #define N_MEAS 9 // measurement size
-PositionSensorHandler::PositionSensorHandler(ssf_core::Measurements* meas) :
-  MeasurementHandler(meas)
+PositionSensorHandler::PositionSensorHandler(ssf_core::Measurements* meas,const ros::NodeHandle & priv_nh) :
+MeasurementHandler(meas)
 {
-  ros::NodeHandle pnh("~");
-  pnh.param("measurement_world_sensor", measurement_world_sensor_, true);
-  pnh.param("use_fixed_covariance", use_fixed_covariance_, false);
+  priv_nh.param("measurement_world_sensor", measurement_world_sensor_, true);
+  priv_nh.param("use_fixed_covariance", use_fixed_covariance_, false);
 
   ROS_INFO_COND(measurement_world_sensor_, "interpreting measurement as sensor w.r.t. world");
   ROS_INFO_COND(!measurement_world_sensor_, "interpreting measurement as world w.r.t. sensor (e.g. ethzasl_ptam)");
@@ -46,17 +45,16 @@ PositionSensorHandler::PositionSensorHandler(ssf_core::Measurements* meas) :
   ROS_INFO_COND(use_fixed_covariance_, "using fixed covariance");
   ROS_INFO_COND(!use_fixed_covariance_, "using covariance from sensor");
 
-  subscribe();
+  subscribe(priv_nh);
 }
 
-void PositionSensorHandler::subscribe()
+void PositionSensorHandler::subscribe(ros::NodeHandle priv_nh)
 {
-	ros::NodeHandle nh("ssf_core");
-	subMeasurement_ = nh.subscribe("position_measurement", 1, &PositionSensorHandler::measurementCallback, this);
+	subMeasurement_ = priv_nh.subscribe("position_measurement", 1, &PositionSensorHandler::measurementCallback, this);
 
 	measurements->ssf_core_.registerCallback(&PositionSensorHandler::noiseConfig, this);
 
-	nh.param("meas_noise1",n_zp_,0.0001);	// default position noise for laser tracker total station
+	priv_nh.param("meas_noise1",n_zp_,0.0001);	// default position noise for laser tracker total station
 
 }
 

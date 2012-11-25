@@ -2,12 +2,18 @@
 
 if [ -n "$1" ]
 then
-T=$1
+	sensor=$1
 else
-T=20
+	echo "no sensor type defined. usage: plot_accbias SensorType [window time]"
+fi
+if [ -n "$2" ]
+then
+	T=$2
+else
+	T=20
 fi
 
 echo " ### plotting acceleration bias x y z [m/s^2] ###"
 echo " ### buffer = " $T "sec"
 
-rxplot ssf_core/state_out/data[13]:data[14]:data[15] -b $T -t "acc bias" -l x,y,z
+rxplot $sensor/state_out/data[13]:data[14]:data[15] -b $T -t "acc bias" -l x,y,z

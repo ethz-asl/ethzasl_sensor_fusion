@@ -63,7 +63,7 @@ public:
 		handlers.push_back(handler);
 	}
 
-	Measurements(const ros::NodeHandle & priv_nh=ros::NodeHandle("~"), const ros::NodeHandle & nh=ros::NodeHandle("ssf_core"));
+	Measurements(const ros::NodeHandle & priv_nh=ros::NodeHandle("~"));
 	virtual ~Measurements();
 };
 

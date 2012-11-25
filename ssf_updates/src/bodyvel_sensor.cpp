@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ssf_core/eigen_utils.h>
 
 #define N_MEAS 4 // measurement size
-BodyVelSensorHandler::BodyVelSensorHandler(ssf_core::Measurements* meas,const ros::NodeHandle & priv_nh, const ros::NodeHandle & nh) :
+BodyVelSensorHandler::BodyVelSensorHandler(ssf_core::Measurements* meas,const ros::NodeHandle & priv_nh) :
   MeasurementHandler(meas)
 {
 	priv_nh.param("measurement_world_sensor", measurement_world_sensor_, true);
@@ -45,12 +45,12 @@ BodyVelSensorHandler::BodyVelSensorHandler(ssf_core::Measurements* meas,const ro
 	ROS_INFO_COND(use_fixed_covariance_, "using fixed covariance");
 	ROS_INFO_COND(!use_fixed_covariance_, "using covariance from sensor");
 
-	subscribe();
+	subscribe(priv_nh);
 }
 
-void BodyVelSensorHandler::subscribe(const ros::NodeHandle & priv_nh, const ros::NodeHandle & nh)
+void BodyVelSensorHandler::subscribe(ros::NodeHandle priv_nh)
 {
-  subMeasurement_ = nh.subscribe("bodyvel_measurement", 1, &BodyVelSensorHandler::measurementCallback, this);
+  subMeasurement_ = priv_nh.subscribe("bodyvel_measurement", 1, &BodyVelSensorHandler::measurementCallback, this);
 
   measurements->ssf_core_.registerCallback(&BodyVelSensorHandler::noiseConfig, this);
 

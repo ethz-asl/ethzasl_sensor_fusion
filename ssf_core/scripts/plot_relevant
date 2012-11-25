@@ -2,9 +2,15 @@
 
 if [ -n "$1" ]
 then
-T=$1
+	sensor=$1
 else
-T=20
+	echo "no sensor type defined. usage: plot_relevant SensorType [window time]"
+fi
+if [ -n "$2" ]
+then
+	T=$2
+else
+	T=20
 fi
 
 echo " ### plotting position x y z [m] ###"
@@ -13,7 +19,7 @@ echo " ### plotting acceleration bias x y z [m/s^2] ###"
 echo " ### plotting scale ###"
 echo " ### buffer = " $T "sec"
 
-rxplot ssf_core/state_out/data[0]:data[1]:data[2] ssf_core/state_out/data[3]:data[4]:data[5] -b $T -t "position & velocity" -l px,py,pz,vx,vy,vz &
-rxplot ssf_core/state_out/data[13]:data[14]:data[15] ssf_core/state_out/data[16] -b $T -t "acc bias & scale" -l x,y,z,L 
+rxplot $sensor/state_out/data[0]:data[1]:data[2] $sensor/state_out/data[3]:data[4]:data[5] -b $T -t "position & velocity" -l px,py,pz,vx,vy,vz &
+rxplot $sensor/state_out/data[13]:data[14]:data[15] $sensor/state_out/data[16] -b $T -t "acc bias & scale" -l x,y,z,L 
 
 

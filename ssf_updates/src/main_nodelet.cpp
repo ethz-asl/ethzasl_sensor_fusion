@@ -47,7 +47,10 @@ class SSFUpdatesNodelet: public nodelet::Nodelet
 {
 public:
 	SSFUpdatesNodelet()
-  {}
+	: nh_("ssf_core")
+  {
+
+  }
 
   ~SSFUpdatesNodelet()
   {
@@ -78,20 +81,22 @@ private:
 		BodyVelMeasurements *BodyVelMeas;
 	#endif
 
+	const ros::NodeHandle nh_;
+
 	virtual void onInit()
 	{
 		#ifdef POSE_MEAS
-			PoseMeas = new PoseMeasurements(getPrivateNodeHandle(),getNodeHandle());
+			PoseMeas = new PoseMeasurements(getPrivateNodeHandle());
 			ROS_INFO_STREAM("Filter type: pose_sensor");
 		#endif
 
 		#ifdef POSITION_MEAS
-			PositionMeas = new PositionMeasurements(getPrivateNodeHandle(),getNodeHandle());
+			PositionMeas = new PositionMeasurements(getPrivateNodeHandle());
 			ROS_INFO_STREAM("Filter type: position_sensor");
 		#endif
 
 		#ifdef BODYVEL_MEAS
-			BodyVelMeas = new BodyVelMeasurements(getPrivateNodeHandle(),getNodeHandle());
+			BodyVelMeas = new BodyVelMeasurements(getPrivateNodeHandle());
 			ROS_INFO_STREAM("Filter type: bodyvel_sensor");
 		#endif
 	}

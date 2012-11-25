@@ -2,10 +2,10 @@
   <node pkg="nodelet" type="nodelet" name="nodelet_manger"  args="manager"/>
 
   <node pkg="nodelet" type="nodelet" name="bodyvel_nodelet" clear_params="true" output="screen" args="load ssf_updates/bodyvel_sensor nodelet_manager">
-    <remap from="ssf_core/hl_state_input" to="/auk/fcu/ekf_state_out" />
-    <remap from="ssf_core/correction" to="/auk/fcu/ekf_state_in" />
+    <remap from="bodyvel_nodelet/hl_state_input" to="/auk/fcu/ekf_state_out" />
+    <remap from="bodyvel_nodelet/correction" to="/auk/fcu/ekf_state_in" />
 
-    <remap from="ssf_core/bodyvel_measurement" to="/auk/camera/image_raw" />
+    <remap from="bodyvel_nodelet/bodyvel_measurement" to="/auk/camera/image_raw" />
 
     <rosparam file="$(find ssf_updates)/bodyvel_sensor_fix.yaml"/>
     <rosparam file="$(find iof)/IOFFixParams.yaml"/>

@@ -36,18 +36,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace ssf_core
 {
 
-SSF_Core::SSF_Core(ros::NodeHandle priv_nh, ros::NodeHandle nh)
+SSF_Core::SSF_Core(ros::NodeHandle priv_nh)
 {
   initialized_ = false;
   predictionMade_ = false;
 
-  pubState_ = nh.advertise<sensor_fusion_comm::DoubleArrayStamped> ("state_out", 1);
-  pubCorrect_ = nh.advertise<sensor_fusion_comm::ExtEkf> ("correction", 1);
-  pubPose_ = nh.advertise<geometry_msgs::PoseWithCovarianceStamped> ("pose", 1);
-  pubPoseCrtl_ = nh.advertise<sensor_fusion_comm::ExtState> ("ext_state", 1);
+  pubState_ = priv_nh.advertise<sensor_fusion_comm::DoubleArrayStamped> ("state_out", 1);
+  pubCorrect_ = priv_nh.advertise<sensor_fusion_comm::ExtEkf> ("correction", 1);
+  pubPose_ = priv_nh.advertise<geometry_msgs::PoseWithCovarianceStamped> ("pose", 1);
+  pubPoseCrtl_ = priv_nh.advertise<sensor_fusion_comm::ExtState> ("ext_state", 1);
 
-  subImu_ = nh.subscribe("imu_state_input", 1 /*N_STATE_BUFFER*/, &SSF_Core::imuCallback, this);
-  subState_ = nh.subscribe("hl_state_input", 1 /*N_STATE_BUFFER*/, &SSF_Core::stateCallback, this);
+  subImu_ = priv_nh.subscribe("imu_state_input", 1 /*N_STATE_BUFFER*/, &SSF_Core::imuCallback, this);
+  subState_ = priv_nh.subscribe("hl_state_input", 1 /*N_STATE_BUFFER*/, &SSF_Core::stateCallback, this);
 
   hl_state_buf_.state.resize(HLI_EKF_STATE_SIZE, 0);
 

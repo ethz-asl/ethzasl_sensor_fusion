@@ -33,12 +33,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ssf_core/eigen_utils.h>
 
 #define N_MEAS 7 // measurement size
-PoseSensorHandler::PoseSensorHandler(ssf_core::Measurements* meas) :
-  MeasurementHandler(meas)
+PoseSensorHandler::PoseSensorHandler(ssf_core::Measurements* meas,const ros::NodeHandle & priv_nh) :
+MeasurementHandler(meas)
 {
-  ros::NodeHandle pnh("~");
-  pnh.param("measurement_world_sensor", measurement_world_sensor_, true);
-  pnh.param("use_fixed_covariance", use_fixed_covariance_, false);
+  priv_nh.param("measurement_world_sensor", measurement_world_sensor_, true);
+  priv_nh.param("use_fixed_covariance", use_fixed_covariance_, false);
 
   ROS_INFO_COND(measurement_world_sensor_, "interpreting measurement as sensor w.r.t. world");
   ROS_INFO_COND(!measurement_world_sensor_, "interpreting measurement as world w.r.t. sensor (e.g. ethzasl_ptam)");
@@ -46,18 +45,17 @@ PoseSensorHandler::PoseSensorHandler(ssf_core::Measurements* meas) :
   ROS_INFO_COND(use_fixed_covariance_, "using fixed covariance");
   ROS_INFO_COND(!use_fixed_covariance_, "using covariance from sensor");
 
-  subscribe();
+  subscribe(priv_nh);
 }
 
-void PoseSensorHandler::subscribe()
+void PoseSensorHandler::subscribe(ros::NodeHandle priv_nh)
 {
-  ros::NodeHandle nh("ssf_core");
-  subMeasurement_ = nh.subscribe("pose_measurement", 1, &PoseSensorHandler::measurementCallback, this);
+  subMeasurement_ = priv_nh.subscribe("pose_measurement", 1, &PoseSensorHandler::measurementCallback, this);
 
   measurements->ssf_core_.registerCallback(&PoseSensorHandler::noiseConfig, this);
 
-  nh.param("meas_noise1", n_zp_, 0.01);	// default position noise is for ethzasl_ptam
-  nh.param("meas_noise2", n_zq_, 0.02);	// default attitude noise is for ethzasl_ptam
+  priv_nh.param("meas_noise1", n_zp_, 0.01);	// default position noise is for ethzasl_ptam
+  priv_nh.param("meas_noise2", n_zq_, 0.02);	// default attitude noise is for ethzasl_ptam
 }
 
 void PoseSensorHandler::noiseConfig(ssf_core::SSF_CoreConfig& config, uint32_t level)

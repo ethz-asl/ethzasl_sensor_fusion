@@ -51,13 +51,13 @@ private:
   bool measurement_world_sensor_; ///< defines if the pose of the sensor is measured in world coordinates (true, default) or vice versa (false, e.g. PTAM)
   bool use_fixed_covariance_; ///< use fixed covariance set by dynamic reconfigure
 
-  void subscribe(const ros::NodeHandle & priv_nh=ros::NodeHandle("~"), const ros::NodeHandle & nh=ros::NodeHandle("ssf_core"));
+  void subscribe(ros::NodeHandle priv_nh=ros::NodeHandle("~"));
   void measurementCallback(const sensor_msgs::ImageConstPtr & img);
   void noiseConfig(ssf_core::SSF_CoreConfig& config, uint32_t level);
 
 public:
   BodyVelSensorHandler();
-  BodyVelSensorHandler(ssf_core::Measurements* meas,const ros::NodeHandle & priv_nh=ros::NodeHandle("~"), const ros::NodeHandle & nh=ros::NodeHandle("ssf_core"));
+  BodyVelSensorHandler(ssf_core::Measurements* meas,const ros::NodeHandle & priv_nh=ros::NodeHandle("~"));
 };
 
 #endif /* BODYVEL_SENSOR_H */

@@ -2,12 +2,18 @@
 
 if [ -n "$1" ]
 then
-T=$1
+	sensor=$1
 else
-T=20
+	echo "no sensor type defined. usage: plot_gyrbias SensorType [window time]"
+fi
+if [ -n "$2" ]
+then
+	T=$2
+else
+	T=20
 fi
 
 echo " ### plotting gyro bias x y z [rad/s] ###"
 echo " ### buffer = " $T "sec"
 
-rxplot ssf_core/state_out/data[10]:data[11]:data[12] -b $T -t "gyr bias" -l x,y,z 
+rxplot $sensor/state_out/data[10]:data[11]:data[12] -b $T -t "gyr bias" -l x,y,z 

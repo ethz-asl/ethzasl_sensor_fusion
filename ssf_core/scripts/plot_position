@@ -2,12 +2,18 @@
 
 if [ -n "$1" ]
 then
-T=$1
+	sensor=$1
 else
-T=20
+	echo "no sensor type defined. usage: plot_position SensorType [window time]"
+fi
+if [ -n "$2" ]
+then
+	T=$2
+else
+	T=20
 fi
 
 echo " ### plotting position x y z [m] ###"
 echo " ### buffer = " $T "sec"
 
-rxplot ssf_core/state_out/data[0]:data[1]:data[2] -b $T -t "position" -l x,y,z 
+rxplot $sensor/state_out/data[0]:data[1]:data[2] -b $T -t "position" -l x,y,z 
