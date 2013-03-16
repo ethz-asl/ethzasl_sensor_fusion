@@ -150,7 +150,7 @@ private:
   std::vector<CallbackType> callbacks_;
 
   /// propagates the state with given dt
-  void propagateState(const double dt);
+  void propagateState(const double dt, bool qint_prop, bool postprop);
 
   /// propagets the error state covariance
   void predictProcessCovariance(const double dt);

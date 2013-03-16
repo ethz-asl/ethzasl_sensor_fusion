@@ -210,7 +210,7 @@ void SSF_Core::imuCallback(const sensor_msgs::ImuConstPtr & msg)
     }
   }
 
-  propagateState(StateBuffer_[idx_state_].time_ - StateBuffer_[(unsigned char)(idx_state_ - 1)].time_);
+  propagateState(StateBuffer_[idx_state_].time_ - StateBuffer_[(unsigned char)(idx_state_ - 1)].time_,1,1);
   predictProcessCovariance(StateBuffer_[idx_P_].time_ - StateBuffer_[(unsigned char)(idx_P_ - 1)].time_);
 
   checkForNumeric((double*)(&StateBuffer_[idx_state_ - 1].p_[0]), 3, "prediction p");
@@ -289,12 +289,14 @@ void SSF_Core::stateCallback(const sensor_fusion_comm::ExtEkfConstPtr & msg)
     StateBuffer_[idx_state_].q_wv_ = StateBuffer_[(unsigned char)(idx_state_ - 1)].q_wv_;
     StateBuffer_[idx_state_].q_ci_ = StateBuffer_[(unsigned char)(idx_state_ - 1)].q_ci_;
     StateBuffer_[idx_state_].p_ci_ = StateBuffer_[(unsigned char)(idx_state_ - 1)].p_ci_;
-    idx_state_++;
 
+    propagateState(StateBuffer_[idx_state_].time_ - StateBuffer_[(unsigned char)(idx_state_ - 1)].time_,1,0);
+
+    idx_state_++;
     hl_state_buf_ = *msg;
   }
   else if (flag == sensor_fusion_comm::ExtEkf::ignore_state || !isnumeric) // otherwise let's do the state prop. here
-    propagateState(StateBuffer_[idx_state_].time_ - StateBuffer_[(unsigned char)(idx_state_ - 1)].time_);
+    propagateState(StateBuffer_[idx_state_].time_ - StateBuffer_[(unsigned char)(idx_state_ - 1)].time_,1,1);
 
   predictProcessCovariance(StateBuffer_[idx_P_].time_ - StateBuffer_[(unsigned char)(idx_P_ - 1)].time_);
 
@@ -318,7 +320,7 @@ void SSF_Core::stateCallback(const sensor_fusion_comm::ExtEkfConstPtr & msg)
 }
 
 
-void SSF_Core::propagateState(const double dt)
+void SSF_Core::propagateState(const double dt, bool qint_prop, bool postprop)
 {
   typedef const Eigen::Matrix<double, 4, 4> ConstMatrix4;
   typedef const Eigen::Matrix<double, 3, 1> ConstVector3;
@@ -364,18 +366,27 @@ void SSF_Core::propagateState(const double dt)
   // first oder quat integration matrix
   ConstMatrix4 quat_int = MatExp + 1.0 / 48.0 * (Omega * OmegaOld - OmegaOld * Omega) * dt * dt;
 
-  // first oder quaternion integration
-  cur_state.q_.coeffs() = quat_int * prev_state.q_.coeffs();
-  cur_state.q_.normalize();
+  //her is how it works:
+  //   - external state propagation: qint_prop=1, postprop=0: state prop is external, only do quatint for delt-rot use
+  //   - internal state propagation: qint_prop=1, postprop=1: we need to prop all things
+  //   - post propagation on during time delay comp: qint_prop=0, postprop=1: we only need to prop the states (in any case)
+  if(qint_prop || !postprop)
+  {
+	  // first oder quaternion integration
+	  cur_state.q_int_.coeffs() = quat_int * prev_state.q_int_.coeffs();
+	  cur_state.q_int_.normalize();
+  }
+  if(postprop || !qint_prop)
+  {
+	  // first oder quaternion integration
+	  cur_state.q_.coeffs() = quat_int * prev_state.q_.coeffs();
+	  cur_state.q_.normalize();
 
-  // first oder quaternion integration
-  cur_state.q_int_.coeffs() = quat_int * prev_state.q_int_.coeffs();
-  cur_state.q_int_.normalize();
-
-  dv = (cur_state.q_.toRotationMatrix() * ea + prev_state.q_.toRotationMatrix() * eaold) / 2;
-  cur_state.v_ = prev_state.v_ + (dv - g_) * dt;
-  cur_state.p_ = prev_state.p_ + ((cur_state.v_ + prev_state.v_) / 2 * dt);
-  idx_state_++;
+	  dv = (cur_state.q_.toRotationMatrix() * ea + prev_state.q_.toRotationMatrix() * eaold) / 2;
+	  cur_state.v_ = prev_state.v_ + (dv - g_) * dt;
+	  cur_state.p_ = prev_state.p_ + ((cur_state.v_ + prev_state.v_) / 2 * dt);
+	  idx_state_++;
+  }
 }
 
 
@@ -613,7 +624,7 @@ bool SSF_Core::applyCorrection(unsigned char idx_delaystate, const ErrorState & 
 
   // propagate state matrix until now
   while (idx_state_ != idx_time_)
-    propagateState(StateBuffer_[idx_state_].time_ - StateBuffer_[(unsigned char)(idx_state_ - 1)].time_);
+    propagateState(StateBuffer_[idx_state_].time_ - StateBuffer_[(unsigned char)(idx_state_ - 1)].time_,0,1);
 
   checkForNumeric(&correction_[0], HLI_EKF_STATE_SIZE, "update");
 

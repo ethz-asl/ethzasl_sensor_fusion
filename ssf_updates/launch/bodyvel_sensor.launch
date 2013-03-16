@@ -1,9 +1,9 @@
 <launch>
     <node name="bodyvel_sensor" pkg="ssf_updates" type="bodyvel_sensor" clear_params="true" output="screen">
-	    <remap from="bodyvel_sensor/hl_state_input" to="/auk/fcu/ekf_state_out" />
-	    <remap from="bodyvel_sensor/correction" to="/auk/fcu/ekf_state_in" />
+	    <remap from="bodyvel_sensor/hl_state_input" to="fcu/ekf_state_out" />
+	    <remap from="bodyvel_sensor/correction" to="fcu/ekf_state_in" />
 
-	    <remap from="bodyvel_sensor/bodyvel_measurement" to="/auk/camera/image_raw" />
+	    <remap from="bodyvel_sensor/bodyvel_measurement" to="camera/image_raw" />
 
 	    <rosparam file="$(find ssf_updates)/bodyvel_sensor_fix.yaml"/>
 	    <rosparam file="$(find iof)/IOFFixParams.yaml"/>

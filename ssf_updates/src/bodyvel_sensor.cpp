@@ -86,7 +86,8 @@ void BodyVelSensorHandler::measurementCallback(const sensor_msgs::ImageConstPtr 
 
 	// get measurements
 	double vel[3] = {0,0,0};
-	if(!inertialOF.imageCallback(img, vel, state_old.q_int_*state_old.q_ci_))
+	double plane[4] = {0,0,0,0};
+	if(!inertialOF.imageCallback(img, vel, plane, state_old.q_int_*state_old.q_ci_))
 		return; // // early abort // //
 
 	z_bv_ = Eigen::Matrix<double, 3, 1>(vel[0], vel[1], vel[2]);

@@ -1,7 +1,7 @@
 <launch>
     <node name="pose_sensor" pkg="ssf_updates" type="pose_sensor" clear_params="true" output="screen">
-	    <remap from="pose_sensor/hl_state_input" to="/mav1/fcu/ekf_state_out" />
-	    <remap from="pose_sensor/correction" to="/mav1/fcu/ekf_state_in" />
+	    <remap from="pose_sensor/hl_state_input" to="fcu/ekf_state_out" />
+	    <remap from="pose_sensor/correction" to="fcu/ekf_state_in" />
 
 	    <remap from="pose_sensor/pose_measurement" to="/vslam/pose" />
 
