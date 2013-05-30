@@ -1,5 +1,5 @@
 <launch>
-    <node name="bodyvel_sensor" pkg="ssf_updates" type="bodyvel_sensor" clear_params="true" output="screen">
+    <node name="bodyvel_sensor" pkg="ssf_updates" type="bodyvel_sensor" clear_params="true" output="screen" launch-prefix="valgrind --leak-check=full --track-origins=yes">
 	    <remap from="bodyvel_sensor/hl_state_input" to="fcu/ekf_state_out" />
 	    <remap from="bodyvel_sensor/correction" to="fcu/ekf_state_in" />
 

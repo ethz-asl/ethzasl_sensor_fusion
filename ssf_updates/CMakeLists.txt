@@ -25,28 +25,28 @@ find_package(Eigen REQUIRED)
 include_directories(${Eigen_INCLUDE_DIRS})
 
 # ============== pose sensor =================== #
-rosbuild_add_executable(pose_sensor src/main.cpp src/pose_sensor.cpp)
-set_property(TARGET pose_sensor PROPERTY COMPILE_DEFINITIONS POSE_MEAS)
-rosbuild_add_compile_flags(pose_sensor "-O3")
-target_link_libraries(pose_sensor ssf_core)
+#rosbuild_add_executable(pose_sensor src/main.cpp src/pose_sensor.cpp)
+#set_property(TARGET pose_sensor PROPERTY COMPILE_DEFINITIONS POSE_MEAS)
+#rosbuild_add_compile_flags(pose_sensor "-O3")
+#target_link_libraries(pose_sensor ssf_core)
 
-rosbuild_add_library(pose_sensor_nodelet src/main_nodelet.cpp src/pose_sensor.cpp)
-set_property(TARGET pose_sensor_nodelet PROPERTY COMPILE_DEFINITIONS POSE_MEAS)
-rosbuild_add_compile_flags(pose_sensor_nodelet "-O3")
-target_link_libraries(pose_sensor_nodelet ssf_core)
+#rosbuild_add_library(pose_sensor_nodelet src/main_nodelet.cpp src/pose_sensor.cpp)
+#set_property(TARGET pose_sensor_nodelet PROPERTY COMPILE_DEFINITIONS POSE_MEAS)
+#rosbuild_add_compile_flags(pose_sensor_nodelet "-O3")
+#target_link_libraries(pose_sensor_nodelet ssf_core)
 # ============== pose sensor =================== #
 
 
 # ============== position sensor =================== #
-rosbuild_add_executable(position_sensor src/main.cpp src/position_sensor.cpp)
-set_property(TARGET position_sensor PROPERTY COMPILE_DEFINITIONS POSITION_MEAS)
-rosbuild_add_compile_flags(position_sensor "-O3")
-target_link_libraries(position_sensor ssf_core)
+#rosbuild_add_executable(position_sensor src/main.cpp src/position_sensor.cpp)
+#set_property(TARGET position_sensor PROPERTY COMPILE_DEFINITIONS POSITION_MEAS)
+#rosbuild_add_compile_flags(position_sensor "-O3")
+#target_link_libraries(position_sensor ssf_core)
 
-rosbuild_add_library(position_sensor_nodelet src/main_nodelet.cpp src/position_sensor.cpp)
-set_property(TARGET position_sensor_nodelet PROPERTY COMPILE_DEFINITIONS POSITION_MEAS)
-rosbuild_add_compile_flags(position_sensor_nodelet "-O3")
-target_link_libraries(position_sensor_nodelet ssf_core)
+#rosbuild_add_library(position_sensor_nodelet src/main_nodelet.cpp src/position_sensor.cpp)
+#set_property(TARGET position_sensor_nodelet PROPERTY COMPILE_DEFINITIONS POSITION_MEAS)
+#rosbuild_add_compile_flags(position_sensor_nodelet "-O3")
+#target_link_libraries(position_sensor_nodelet ssf_core)
 # ============== position sensor =================== #
 
 
@@ -56,8 +56,8 @@ set_property(TARGET bodyvel_sensor PROPERTY COMPILE_DEFINITIONS BODYVEL_MEAS)
 rosbuild_add_compile_flags(bodyvel_sensor "-O3")
 target_link_libraries(bodyvel_sensor ssf_core)
 
-rosbuild_add_library(bodyvel_sensor_nodelet src/main_nodelet.cpp src/bodyvel_sensor.cpp)
-set_property(TARGET bodyvel_sensor_nodelet PROPERTY COMPILE_DEFINITIONS BODYVEL_MEAS)
-rosbuild_add_compile_flags(bodyvel_sensor_nodelet "-O3")
-target_link_libraries(bodyvel_sensor_nodelet ssf_core)
+#rosbuild_add_library(bodyvel_sensor_nodelet src/main_nodelet.cpp src/bodyvel_sensor.cpp)
+#set_property(TARGET bodyvel_sensor_nodelet PROPERTY COMPILE_DEFINITIONS BODYVEL_MEAS)
+#rosbuild_add_compile_flags(bodyvel_sensor_nodelet "-O3")
+#target_link_libraries(bodyvel_sensor_nodelet ssf_core)
 # ============== bodyvel sensor =================== #

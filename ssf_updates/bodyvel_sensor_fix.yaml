@@ -17,8 +17,8 @@ data_playback: True
 
 # initialization of camera w.r.t. IMU: QR1
 init/q_ci/w: 0.0
-init/q_ci/x: 0.9239   
-init/q_ci/y: -0.3827
+init/q_ci/x: 0.3827   
+init/q_ci/y: 0.9239
 init/q_ci/z: 0.0
 
 init/p_ci/x: 0.0    
