@@ -40,5 +40,6 @@ catkin_package(
 )
 
 add_library(ssf_core src/SSF_Core.cpp src/measurement.cpp src/state.cpp)
+add_dependencies(ssf_core ${PROJECT_NAME}_gencfg)
 target_link_libraries(ssf_core ${catkin_LIBRRIES})
 
