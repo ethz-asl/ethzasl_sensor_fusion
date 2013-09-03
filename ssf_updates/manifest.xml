@@ -12,7 +12,7 @@
   <depend package="ssf_core"/>
   <depend package="geometry_msgs"/>
   <depend package="iof"/>
-  <depend package="cont8"/>
+  <!--depend package="cont8"/-->
   
   <depend package="nodelet" />
   

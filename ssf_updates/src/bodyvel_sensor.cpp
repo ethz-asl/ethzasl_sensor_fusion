@@ -128,3 +128,6 @@ void BodyVelSensorHandler::measurementCallback(const sensor_msgs::ImageConstPtr 
   // call update step in core class
   measurements->ssf_core_.applyMeasurement(idx, H_old, r_old, R);
 }
+
+
+//r /ssf_core/hl_state_input:=/fcu/ekf_state_out /ssf_core/bodyvel_measurement:=/camera/image_raw
