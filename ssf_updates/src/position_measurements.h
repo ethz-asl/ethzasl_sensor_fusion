@@ -53,17 +53,24 @@ public:
 	    priv_nh.param("init/q_ci/y", q_ci_.y(), 0.0);
 	    priv_nh.param("init/q_ci/z", q_ci_.z(), 0.0);
 	    q_ci_.normalize();
+
+	    priv_nh.param("init/q_wv/w", q_wv_.w(), 1.0);
+	    priv_nh.param("init/q_wv/x", q_wv_.x(), 0.0);
+	    priv_nh.param("init/q_wv/y", q_wv_.y(), 0.0);
+	    priv_nh.param("init/q_wv/z", q_wv_.z(), 0.0);
+	    q_wv_.normalize();
 	}
 
 private:
 
 	  Eigen::Matrix<double, 3, 1> p_ci_; ///< initial distance camera-IMU
 	  Eigen::Quaternion<double> q_ci_; ///< initial rotation camera-IMU
+	  Eigen::Quaternion<double> q_wv_; ///< initial rotation world-vision
 
 	void init(double scale)
 	{
 	    Eigen::Matrix<double, 3, 1> p, v, b_w, b_a, g, w_m, a_m;
-	    Eigen::Quaternion<double> q, q_wv;
+	    Eigen::Quaternion<double> q;
 	    ssf_core::SSF_Core::ErrorStateCov P;
 
 		// init values
@@ -75,8 +82,6 @@ private:
 		w_m << 0,0,0;		/// initial angular velocity
 		a_m =g;				/// initial acceleration
 
-	    q_wv.setIdentity(); // vision-world rotation drift
-
 	    P.setZero(); // error state covariance; if zero, a default initialization in ssf_core is used
 
 		// check if we have already input from the measurement sensor
@@ -86,12 +91,12 @@ private:
 			ROS_WARN_STREAM("No measurements received yet to initialize attitude - using [1 0 0 0]");
 
 		// calculate initial attitude and position based on sensor measurements
-		q = (q_ci_ * q_cv_.conjugate() * q_wv).conjugate();
+		q = (q_ci_ * q_cv_.conjugate() * q_wv_).conjugate();
 		q.normalize();
-		p = q_wv.conjugate().toRotationMatrix()*p_vc_/scale - q.toRotationMatrix()*p_ci_;
+		p = q_wv_.conjugate().toRotationMatrix()*p_vc_/scale - q.toRotationMatrix()*p_ci_;
 
 		// call initialization in core
-		ssf_core_.initialize(p,v,q,b_w,b_a,scale,q_wv,P,w_m,a_m,g,q_ci_,p_ci_);
+		ssf_core_.initialize(p,v,q,b_w,b_a,scale,q_wv_,P,w_m,a_m,g,q_ci_,p_ci_);
 
 	    ROS_INFO_STREAM("filter initialized to: \n" <<
 	        "position: [" << p[0] << ", " << p[1] << ", " << p[2] << "]" << std::endl <<

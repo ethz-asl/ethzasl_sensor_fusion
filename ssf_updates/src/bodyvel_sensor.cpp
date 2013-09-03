@@ -46,6 +46,12 @@ BodyVelSensorHandler::BodyVelSensorHandler(ssf_core::Measurements* meas,const ro
 	ROS_INFO_COND(!use_fixed_covariance_, "using covariance from sensor");
 
 	subscribe(priv_nh);
+
+	inertialOF_=new(iof::IOF);
+}
+
+BodyVelSensorHandler::~BodyVelSensorHandler()
+{
 }
 
 void BodyVelSensorHandler::subscribe(ros::NodeHandle priv_nh)
@@ -82,13 +88,39 @@ void BodyVelSensorHandler::measurementCallback(const sensor_msgs::ImageConstPtr 
 
 	unsigned char idx = measurements->ssf_core_.getClosestState(&state_old, time_old);
 	if (state_old.time_ == -1)
-	return; // // early abort // //
+		return; // // early abort // //
+
+//	static double t = time_old.toSec();
+//	if(time_old.toSec()-t<=0)
+//		ROS_WARN_STREAM("got same quaternion again - should not happen!" <<  time_old.toSec()-t);
+//	t = time_old.toSec();
 
 	// get measurements
 	double vel[3] = {0,0,0};
 	double plane[4] = {0,0,0,0};
-	if(!inertialOF.imageCallback(img, vel, plane, state_old.q_int_*state_old.q_ci_))
+//	Eigen::Quaternion<double> q(1,0,0,0);
+
+	bool retval = inertialOF_->imageCallback(img, vel, plane, state_old.q_int_*state_old.q_ci_);
+	if(!retval)
 		return; // // early abort // //
+
+//	Eigen::Quaternion<double> q1(0.8125, 0.3779, 0.4425, 0.0362);
+//	Eigen::Quaternion<double> q2(0.8115, 0.3976, 0.4215, 0.0760);
+//	Eigen::Quaternion<double> qci(0, 0.3643, 0.9313, 0);
+//	q1.normalize(); q2.normalize();qci.normalize();
+//	Eigen::Quaternion<double> qof1 = q1*qci;
+//	Eigen::Quaternion<double> qof2 = q2*qci;
+//	Eigen::Quaternion<double> dq = qof1.conjugate()*qof2;
+//	Eigen::Matrix<double,3,3> Rof = dq.toRotationMatrix();
+//	ROS_WARN_STREAM("qof1=\n"<< qof1.coeffs() << "qof2=\n"<< qof2.coeffs() << "dq=\n"<< dq.coeffs() << "R=\n" << Rof);
+
+
+//	static ssf_core::State state_oldold=state_old;
+//	FILE *f2 = fopen("/home/sweiss/Desktop/datt.txt","w");
+//	fprintf(f2,"%f %f %f %f %f %f %f %f\n",state_old.q_int_.w(),state_old.q_int_.x(),state_old.q_int_.y(),state_old.q_int_.z(),
+//			state_oldold.q_int_.w(),state_oldold.q_int_.x(),state_oldold.q_int_.y(),state_oldold.q_int_.z());
+//	fclose(f2);
+//	state_oldold=state_old;
 
 	z_bv_ = Eigen::Matrix<double, 3, 1>(vel[0], vel[1], vel[2]);
 

@@ -43,8 +43,8 @@ private:
   Eigen::Matrix<double, 3, 1> z_bv_; /// body velocity
   double n_zbv_; /// body velocity noise
 
-  iof::IOF inertialOF;
-//  cont8 inertialOF;
+  	iof::IOF *inertialOF_;
+//  cont8 inertialOF_;
 
   ros::Subscriber subMeasurement_;
 
@@ -56,6 +56,7 @@ private:
   void noiseConfig(ssf_core::SSF_CoreConfig& config, uint32_t level);
 
 public:
+  ~BodyVelSensorHandler();
   BodyVelSensorHandler();
   BodyVelSensorHandler(ssf_core::Measurements* meas,const ros::NodeHandle & priv_nh=ros::NodeHandle("~"));
 };
