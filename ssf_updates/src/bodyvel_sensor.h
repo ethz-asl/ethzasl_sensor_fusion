@@ -56,6 +56,7 @@ private:
   void noiseConfig(ssf_core::SSF_CoreConfig& config, uint32_t level);
 
 public:
+
   ~BodyVelSensorHandler();
   BodyVelSensorHandler();
   BodyVelSensorHandler(ssf_core::Measurements* meas,const ros::NodeHandle & priv_nh=ros::NodeHandle("~"));

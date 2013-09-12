@@ -47,11 +47,12 @@ BodyVelSensorHandler::BodyVelSensorHandler(ssf_core::Measurements* meas,const ro
 
 	subscribe(priv_nh);
 
-	inertialOF_=new(iof::IOF);
+	inertialOF_=new iof::IOF();
 }
 
 BodyVelSensorHandler::~BodyVelSensorHandler()
 {
+	delete inertialOF_;
 }
 
 void BodyVelSensorHandler::subscribe(ros::NodeHandle priv_nh)
