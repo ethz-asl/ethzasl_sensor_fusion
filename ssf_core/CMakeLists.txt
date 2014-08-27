@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(ssf_core)
 
-find_package(catkin REQUIRED COMPONENTS roscpp sensor_msgs dynamic_reconfigure sensor_fusion_comm)
+find_package(catkin REQUIRED COMPONENTS roscpp sensor_msgs dynamic_reconfigure cmake_modules sensor_fusion_comm)
 
 # Set the build type.  Options are:
 #  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
