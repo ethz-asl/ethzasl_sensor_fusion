@@ -30,7 +30,7 @@ add_definitions (-Wall -O3)
 find_package(Eigen REQUIRED)
 include_directories(include ${Eigen_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 
-generate_dynamic_reconfigure_options(cfg/SSF_CORE.cfg)
+generate_dynamic_reconfigure_options(cfg/SSF_Core.cfg)
 
 catkin_package(
     DEPENDS
