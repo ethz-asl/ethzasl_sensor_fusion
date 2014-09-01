@@ -1,0 +1,32 @@
+<package>
+  <name>ssf_updates</name>
+  <version>0.1.0</version>
+  <description>Single Sensor Fusion (SSF) framework containing the update sensor modules</description>
+  <maintainer email="none@none.com">Stephan Weiss</maintainer>
+  <maintainer email="none@none.com">Markus Achtelik</maintainer>
+
+  <license>BSD</license>
+
+  <url type="website">http://ros.org/wiki/ethzasl_sensor_fusion/ssf_updates</url>
+  <url type="bugtracker">http://github.com/ethz-asl/ethzasl_sensor_fusion/issues</url>
+
+  <author>Stephan Weiss</author>
+  <author>Markus Achtelik</author>
+
+  <!-- Dependencies which this package needs to build itself. -->
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- Dependencies needed to compile this package. -->
+  <build_depend>roscpp</build_depend>
+  <build_depend>ssf_core</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+
+  <!-- Dependencies needed after this package is compiled. -->
+  <run_depend>roscpp</run_depend>
+  <run_depend>ssf_core</run_depend>
+  <run_depend>geometry_msgs</run_depend>
+
+  <export>
+
+  </export>
+</package>

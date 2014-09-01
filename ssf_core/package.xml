@@ -1,0 +1,33 @@
+<package>
+  <name>ssf_core</name>
+  <version>0.1.0</version>
+  <description>Single Sensor Fusion (SSF) framework containing the core filter functions including full state propagation and shell for update sensor modules</description>
+  <maintainer email="none@none.com">Stephan Weiss</maintainer>
+  <maintainer email="none@none.com">Markus Achtelik</maintainer>
+
+  <license>BSD</license>
+
+  <url type="website">http://ros.org/wiki/ethzasl_sensor_fusion/ssf_core</url>
+  <url type="bugtracker">http://github.com/ethz-asl/ethzasl_sensor_fusion/issues</url>
+
+  <author>Stephan Weiss</author>
+  <author>Markus Achtelik</author>
+
+  <!-- Dependencies which this package needs to build itself. -->
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- Dependencies needed to compile this package. -->
+  <build_depend>roscpp</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>dynamic_reconfigure</build_depend>
+  <build_depend>sensor_fusion_comm</build_depend>
+  <build_depend>eigen</build_depend>
+  <build_depend>cmake_modules</build_depend>
+
+  <!-- Dependencies needed after this package is compiled. -->
+  <run_depend>roscpp</run_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>dynamic_reconfigure</run_depend>
+  <run_depend>sensor_fusion_comm</run_depend>
+  <run_depend>eigen</run_depend>
+</package>
